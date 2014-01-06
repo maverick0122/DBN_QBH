@@ -13,15 +13,15 @@ import theano
 import theano.tensor as T
 from theano.tensor.shared_randomstreams import RandomStreams
 
-from logistic_sgd import LogisticRegression, load_data
+from logistic_sgd import LogisticRegression #, load_data
 from mlp import HiddenLayer
 from rbm import RBM
+from prep_qbh import load_data
 
 DATASET = './data/'   #训练数据和标注数据所在文件夹
-N_FRAMES = 20 # HAS TO BE AN ODD NUMBER 特征抽取的窗长(帧数)
-              #(same number before and after center frame)
-DIMENSION = 1  #dimension of feature vector 每帧的数据维数
-N_OUTS = 100    #dimension of the output
+N_FRAMES = 20 #特征抽取的窗长(帧数)
+DIMENSION = 1  #每帧的数据维数
+N_OUTS = 10    #输出长度
 
 
 class DBN(object):
@@ -43,7 +43,7 @@ class DBN(object):
     '''
 
     def __init__(self, numpy_rng, theano_rng=None, n_ins=DIMENSION * N_FRAMES,
-                 hidden_layers_sizes=[1024, 1024], n_outs=N_OUTS):
+                 hidden_layers_sizes=[1000, 1000], n_outs=N_OUTS):
         """This class is made to support a variable number of layers.
 
         :type numpy_rng: numpy.random.RandomState
@@ -81,8 +81,9 @@ class DBN(object):
             theano_rng = RandomStreams(numpy_rng.randint(2 ** 30))
 
         # allocate symbolic variables for the data
-        self.x = T.matrix('x')  # the data is presented as rasterized images
-        self.y = T.ivector('y')  # the labels are presented as 1D vector
+        # 为数据开辟符号变量
+        self.x = T.matrix('x')  # the data is presented as rasterized images 数据表示为光栅图像
+        self.y = T.ivector('y')  # the labels are presented as 1D vector 标签表示为一维整形数组
                                  # of [int] labels
 
         # The DBN is an MLP, for which all weights of intermediate
@@ -95,12 +96,19 @@ class DBN(object):
         # training the DBN by doing stochastic gradient descent on the
         # MLP.
 
+        #DBN是一个MLP,每个中间层的权重被一个RBM共享，且RBM互不相同.先建立一个MLP,
+        #在建立MLP的若干sigmoid层时建立对应的RBM层，RBM层共享sigmoid层的权重.
+        #预训练时训练RBM，并引发MLP的权重改变
+        #微调时通过在MLP中做随机梯度下降完成训练
+
         for i in xrange(self.n_layers):
             # construct the sigmoidal layer
 
             # the size of the input is either the number of hidden
             # units of the layer below or the input size if we are on
             # the first layer
+            # 每层的输入大小：在第一层，为输入数据大小
+            # 不在第一层，为上一层输出大小
             if i == 0:
                 input_size = n_ins
             else:
@@ -109,6 +117,8 @@ class DBN(object):
             # the input to this layer is either the activation of the
             # hidden layer below or the input of the DBN if you are on
             # the first layer
+            # 每层的输入数据：在第一层，为输入数据
+            # 不在第一层，为上一层输出
             if i == 0:
                 layer_input = self.x
             else:
@@ -128,9 +138,12 @@ class DBN(object):
             # sigmoid_layers are parameters of the DBN. The visible
             # biases in the RBM are parameters of those RBMs, but not
             # of the DBN.
+            #sigmoid层的参数是DBN的参数
+            #但是RBM的可见偏置是RBM的参数，不是DBM的参数
             self.params.extend(sigmoid_layer.params)
 
             # Construct an RBM that shared weights with this layer
+            # 建立共享这一层权重的RBM
             rbm_layer = RBM(numpy_rng=numpy_rng,
                             theano_rng=theano_rng,
                             input=layer_input,
@@ -141,6 +154,7 @@ class DBN(object):
             self.rbm_layers.append(rbm_layer)
 
         # We now need to add a logistic layer on top of the MLP
+        # 在MLP上方加一个logistic层
         self.logLayer = LogisticRegression(
             input=self.sigmoid_layers[-1].output,
             n_in=hidden_layers_sizes[-1],
@@ -149,11 +163,14 @@ class DBN(object):
 
         # compute the cost for second phase of training, defined as the
         # negative log likelihood of the logistic regression (output) layer
+        # 计算训练第二阶段的代价，定义为logistic回归的负对数似然性
         self.finetune_cost = self.logLayer.negative_log_likelihood(self.y)
 
         # compute the gradients with respect to the model parameters
         # symbolic variable that points to the number of errors made on the
         # minibatch given by self.x and self.y
+        # 根据模型参数计算梯度
+        # 指向有小批量数据产生的错误数的符号变量由self.x，self.y给出
         self.errors = self.logLayer.errors(self.y)
 
     def pretraining_functions(self, train_set_x, batch_size, k):
@@ -327,14 +344,16 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
     print '... building the model'
     # construct the Deep Belief Network
     # 建立DBN
-    dbn = DBN(numpy_rng=numpy_rng, n_ins=28 * 28,
+    dbn = DBN(numpy_rng=numpy_rng, n_ins=DIMENSION * N_FRAMES,
               hidden_layers_sizes=[1000, 1000, 1000],
-              n_outs=10)
+              n_outs=N_OUTS)
 
     #########################
     # PRETRAINING THE MODEL #
     #########################
     # 预训练模型
+
+    #生成预训练函数
     print '... getting the pretraining functions'
     pretraining_fns = dbn.pretraining_functions(train_set_x=train_set_x,
                                                 batch_size=batch_size,
@@ -343,12 +362,17 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
     print '... pre-training the model'
     start_time = time.clock()
     ## Pre-train layer-wise
+    #逐层预训练
     for i in xrange(dbn.n_layers):
         # go through pretraining epochs
+        # 迭代预训练
         for epoch in xrange(pretraining_epochs):
             # go through the training set
+            # 遍历训练集
             c = []
+            #遍历每个小批量数据
             for batch_index in xrange(n_train_batches):
+                #训练当前小批量数据并加入c
                 c.append(pretraining_fns[i](index=batch_index,
                                             lr=pretrain_lr))
             print 'Pre-training layer %i, epoch %d, cost ' % (i, epoch),
@@ -372,13 +396,15 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
                 learning_rate=finetune_lr)
 
     print '... finetunning the model'
-    # early-stopping parameters
     # early-stopping parameters 停止参数
-    patience = 4 * n_train_batches  # look as this many examples regardless 查看这么多样本
+    patience = 4 * n_train_batches  # look as this many examples regardless 最小迭代微调次数
     patience_increase = 2.    # wait this much longer when a new best is
-                              # found 找到新的最佳时等待的时间
+                              # found
+                              # 找到新的最佳时,微调迭代次数变为现在的patience_increase倍
     improvement_threshold = 0.995  # a relative improvement of this much is
-                                   # considered significant 相关提升门限，高于门限才被认为是有效的 
+                                   # considered significant 
+                                   # 新的校验损失低于原来校验损失的improvement_threshold倍
+                                   # 才认为有意义
     validation_frequency = min(n_train_batches, patience / 2)
                                   # go through this many 
                                   # minibatche before checking the network
@@ -401,14 +427,14 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
         # 遍历每个小批量数据
         for minibatch_index in xrange(n_train_batches):
 
-            minibatch_avg_cost = train_fn(minibatch_index)
-            iter = epoch * n_train_batches + minibatch_index
+            minibatch_avg_cost = train_fn(minibatch_index)  #本次小批量数据的平均代价
+            iter = epoch * n_train_batches + minibatch_index    #总体上是第几次计算小批量数据
 
             # 每validation_frequency次进行一次校验
             if (iter + 1) % validation_frequency == 0:
 
-                validation_losses = validate_model()
-                this_validation_loss = numpy.mean(validation_losses)
+                validation_losses = validate_model()    #计算校验损失
+                this_validation_loss = numpy.mean(validation_losses)    #平均损失
                 print('epoch %i, minibatch %i/%i, validation error %f %%' % \
                       (epoch, minibatch_index + 1, n_train_batches,
                        this_validation_loss * 100.))
@@ -419,6 +445,8 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
 
                     #improve patience if loss improvement is good enough
                     # 如果损失提升足够好，提升patience
+                    # 即若损失提升足够好，证明微调还在寻找最佳，没有收敛
+                    # 所以增大patience使微调迭代次数变为patience_increase倍
                     if (this_validation_loss < best_validation_loss *
                         improvement_threshold):
                         patience = max(patience, iter * patience_increase)
@@ -430,8 +458,8 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
 
                     # test it on the test set
                     # 在测试集上测试
-                    test_losses = test_model()
-                    test_score = numpy.mean(test_losses)
+                    test_losses = test_model()  #计算测试损失
+                    test_score = numpy.mean(test_losses)    #平均损失
                     print(('     epoch %i, minibatch %i/%i, test error of '
                            'best model %f %%') %
                           (epoch, minibatch_index + 1, n_train_batches,
@@ -454,4 +482,4 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
         cPickle.dump(dbn, f)
 
 if __name__ == '__main__':
-    test_DBN()
+    test_DBN(dataset='')

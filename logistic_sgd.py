@@ -176,6 +176,13 @@ def load_data(dataset):
     f = gzip.open(dataset, 'rb')
     train_set, valid_set, test_set = cPickle.load(f)
     f.close()
+    
+    print 'train_set x shape',train_set[0].shape
+    print 'train_set y shape',train_set[1].shape
+    print 'test_set x shape',test_set[0].shape
+    print 'test_set y shape',test_set[1].shape
+    print 'valid_set x shape',valid_set[0].shape
+    print 'valid_set y shape',valid_set[1].shape
     #train_set, valid_set, test_set format: tuple(input, target)
     #input is an numpy.ndarray of 2 dimensions (a matrix)
     #witch row's correspond to an example. target is a
