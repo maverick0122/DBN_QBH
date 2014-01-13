@@ -7,8 +7,7 @@ BORROW = True # True makes it faster with the GPU
 USE_CACHING = False # beware if you use RBM / GRBM or gammatones / speaker labels alternatively, set it to False
 
 
-def prep_data(dataset, scaling='normalize',
-        pca_whiten=0):
+def prep_data(dataset, scaling='normalize', pca_whiten=0):
     xname = "xdata"
     try:
         train_x = np.load(dataset + "/aligned_train_xdata.npy")

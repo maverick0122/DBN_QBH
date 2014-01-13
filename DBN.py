@@ -19,9 +19,9 @@ from rbm import RBM
 from prep_qbh import load_data
 
 DATASET = './data/'   #训练数据和标注数据所在文件夹
-N_FRAMES = 20 #特征抽取的窗长(帧数)
+N_FRAMES = 20   #特征抽取的窗长(帧数)
 DIMENSION = 1  #每帧的数据维数
-N_OUTS = 10    #输出长度
+N_OUTS = 60    #输出长度(分类数)
 
 
 class DBN(object):

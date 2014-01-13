@@ -117,7 +117,7 @@ def draw_cluser(dataset,centroid,label,k): #画出前k个聚类的曲线
                 'linewidth' : 3,
                 'color': colors[prei%len(colors)+1]
             }
-            tool.addline(lineConf)  #打印上一个聚类中心
+            tool.addline(lineConf)  #打印聚类中心
             tool.plot()
             tool.show()
             if clus_cnt>=k:
