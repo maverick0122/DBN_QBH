@@ -1,6 +1,5 @@
 #-*- coding:utf-8 -*-   #允许文档中有中文
 import numpy as np
-from numpy import linalg
 import functools
 import sys, math
 import cPickle
@@ -12,20 +11,21 @@ reload(sys)
 sys.setdefaultencoding('utf-8') #允许打印unicode字符
 
 usage = """
-python result.py OUTPUT[.mlf] INPUT_SCP INPUT_HMM  
-        [--d DBN_PICKLED_FILE DBN_TO_INT_TO_STATE_DICTS_TUPLE]
+python result.py OUTPUT[.txt] INPUT_QUERY
+        [--d DBN_PICKLED_FILE]
 
 Exclusive uses of these options:
     --d followed by a pickled DBN file
 """
 
-N_BATCHES_DATASET = 32 # number of batches in which we divide the dataset 
+N_BATCHES_DATASET = 10 # number of batches in which we divide the dataset 
                       # (to fit in the GPU memory, only 2Gb at home)
+                      # 每个小批量数据包含的查询数
 N_FRAMES = 20   #特征抽取的窗长(帧数)
 
 
 def compute_likelihoods_dbn(dbn, mat, depth=np.iinfo(int).max, normalize=True, unit=False):
-    """ compute the log-likelihoods of each states i according to the Deep 
+    """compute the log-likelihoods of each states i according to the Deep 
     Belief Network (stacked RBMs) in dbn, for each line of mat (input data) 
     depth is the depth of the DBN at which the likelihoods will pop out,
     if None, the full DBN is used"""
@@ -42,19 +42,22 @@ def compute_likelihoods_dbn(dbn, mat, depth=np.iinfo(int).max, normalize=True, u
     ret = np.ndarray((mat.shape[0], dbn.logLayer.b.shape[0].eval()), dtype="float32")
     from theano import shared#, scan
     # propagating through the deep belief net
-    batch_size = mat.shape[0] / N_BATCHES_DATASET
+    batch_size = mat.shape[0] / N_BATCHES_DATASET   #计算有多少组小批量数据
     max_layer = dbn.n_layers
     out_ret = None
     if depth < dbn.n_layers:
-        max_layer = min(dbn.n_layers, depth)
-        print max_layer
+        max_layer = depth
+        print 'max layer reduce to',max_layer
         out_ret = np.ndarray((mat.shape[0], dbn.rbm_layers[max_layer].W.shape[1].eval()), dtype="float32")
     else:
         out_ret = np.ndarray((mat.shape[0], dbn.logLayer.b.shape[0].eval()), dtype="float32")
 
+    #遍历每个小批量数据
     for ind in xrange(0, mat.shape[0]+1, batch_size):
-        output = shared(mat[ind:ind+batch_size])
+        output = shared(mat[ind:ind+batch_size])    #取当前小批量数据
         print "evaluating the DBN on all the test input"
+
+        #遍历DBN每一层
         for layer_ind in xrange(max_layer):
             [pre, output] = dbn.rbm_layers[layer_ind].propup(output)
         if depth >= dbn.n_layers:
@@ -97,6 +100,7 @@ def process(ofname, iqueryfname, idbnfname):
 
     #计算似然性（查询属于每个类的概率）
     print "computing likelihoods"
+    likelihoods = None
     if dbn != None:
         likelihoods = likelihoods_computer(query)
         #mean_dbns = np.mean(tmp_likelihoods, 0)
@@ -106,10 +110,18 @@ def process(ofname, iqueryfname, idbnfname):
         #print likelihoods[0]
         #print likelihoods[0].shape
 
+    #存储结果
+    ans = []
+    for likelihood in likelihoods:
+        lis = [(likelihood[i],i) for i in range(0,len(likelihood))]
+        lis.sort()  
+        lis.reverse()   #按概率从大到小排序
+        ans.append([lis[i][1] for i in range(0,len(lis))])  #将排序的类号加入结果数组
+
+
     #保存查询结果
     with open(ofname, 'w') as of:
-        of.write('#!MLF!#\n')
-        for line in list_mlf_string:
+        for line in ans:
             of.write(line)
 
 
@@ -125,19 +137,15 @@ if __name__ == "__main__":
             for ind, option in options:
                 args.pop(ind)
                 if option == '--d':
-                    try:
-                        from DBN_Gaussian_timit import DBN # not Gaussian if no GRBM
-                    except:
-                        print >> sys.stderr, "experimental: TO BE LAUNCHED FROM THE 'DBN/' DIR"
-                        sys.exit(-1)
                     dbn_fname = args[ind+1]
                     args.pop(ind+1)
                     print "will use the following DBN to estimate states likelihoods", dbn_fname
         else:
-            print "initialize the transitions between phones uniformly"
+            print "need to load DBN."
+            sys.exit(-1)
         output_fname = args.values()[1]
-        input_scp_fname = args.values()[2]
-        process(output_fname, input_scp_fname, dbn_fname)
+        input_query_fname = args.values()[2]
+        process(output_fname, input_query_fname, dbn_fname)
     else:
         print usage
         sys.exit(-1)

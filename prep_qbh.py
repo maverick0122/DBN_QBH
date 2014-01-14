@@ -55,7 +55,7 @@ def prep_data(dataset, scaling='normalize', pca_whiten=0):
         cPickle.dump((to_int, to_state), f)
 
     print "preparing / int mapping Ys"
-    train_y_f = np.zeros(train_y.shape[0], dtype='int64')
+    train_y_f = np.zeros(train_y.shape[0], dtype='float32')
     for i, e in enumerate(train_y):
         train_y_f[i] = to_int[e]    #记录每个样本对应的类号
         # print train_y_f[i]
@@ -114,21 +114,21 @@ def load_data(dataset, scaling='normalize',
     X_train, test_x, y_train, test_y = cross_validation.train_test_split(X_train1, y_train1, test_size=real_test_cv_frac, random_state=0)
     if numpy_array_only:
         train_set_x = X_train
-        train_set_y = np.asarray(y_train, dtype='int64')
+        train_set_y = np.asarray(y_train, dtype='float32')
         val_set_x = X_validate
-        val_set_y = np.asarray(y_validate, dtype='int64')
+        val_set_y = np.asarray(y_validate, dtype='float32')
         test_set_x = test_x
-        test_set_y = np.asarray(test_y, dtype='int64')
+        test_set_y = np.asarray(test_y, dtype='float32')
     else:
         train_set_x = theano.shared(X_train, borrow=BORROW)
         train_set_y = theano.shared(np.asarray(y_train, dtype=theano.config.floatX), borrow=BORROW)
-        train_set_y = T.cast(train_set_y, 'int64')
+        train_set_y = T.cast(train_set_y, 'float32')
         val_set_x = theano.shared(X_validate, borrow=BORROW)
         val_set_y = theano.shared(np.asarray(y_validate, dtype=theano.config.floatX), borrow=BORROW)
-        val_set_y = T.cast(val_set_y, 'int64')
+        val_set_y = T.cast(val_set_y, 'float32')
         test_set_x = theano.shared(test_x, borrow=BORROW)
         test_set_y = theano.shared(np.asarray(test_y, dtype=theano.config.floatX), borrow=BORROW)
-        test_set_y = T.cast(test_set_y, 'int64')
+        test_set_y = T.cast(test_set_y, 'float32')
 
     return [(train_set_x, train_set_y), 
             (val_set_x, val_set_y),
