@@ -18,7 +18,8 @@ from mlp import HiddenLayer
 from rbm import RBM
 from prep_qbh import load_data
 
-DATASET = './data/'   #训练数据和标注数据所在文件夹
+DATASET = './data'   #训练数据和标注数据所在文件夹
+OUTPUTFILE = DATASET+'/dbn_qbh.pickle'   #输出的DBN pickle文件的路径
 N_FRAMES = 20   #特征抽取的窗长(帧数)
 DIMENSION = 1  #每帧的数据维数
 N_OUTS = 60    #输出长度(分类数)
@@ -300,7 +301,8 @@ class DBN(object):
 
 def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
              pretrain_lr=0.01, k=1, training_epochs=1000,
-             dataset='mnist.pkl.gz', batch_size=10):
+             dataset='/mnist.pkl.gz', batch_size=10,
+             outputfile):
     """
 
     :type finetune_lr: float
@@ -324,6 +326,8 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
     :type batch_size: int
     :param batch_size: the size of a minibatch
                         小批量数据大小
+    :type outputfile: string
+    :param outputfile: 输出的DBN pickle的路径
     """
 
     datasets = load_data(DATASET+dataset)
@@ -478,8 +482,8 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
                           os.path.split(__file__)[1] +
                           ' ran for %.2fm' % ((end_time - start_time)
                                               / 60.))
-    with open('dbn_1.pickle', 'w') as f:
+    with open(outputfile, 'w') as f:
         cPickle.dump(dbn, f)
 
 if __name__ == '__main__':
-    test_DBN(dataset='')
+    test_DBN(dataset='',outputfile=OUTPUTFILE)

@@ -13,13 +13,13 @@ K = 60  #聚类数
 def prep_data(dataset): #从npy文件读入数据
     try:
         train_x = np.load(dataset + "/aligned_train_xdata.npy")
-        train_y = np.load(dataset + "/aligned_train_ylabels.npy")
+        train_y = np.load(dataset + "/aligned_train_ylabels_song.npy")
 
     except:
         print >> sys.stderr, "you need the .npy python arrays"
         print >> sys.stderr, "you can produce them with txt_to_numpy.py"
         print >> sys.stderr, dataset + "/aligned_train_xdata.npy"
-        print >> sys.stderr, dataset + "/aligned_train_ylabels.npy"
+        print >> sys.stderr, dataset + "/aligned_train_ylabels_song.npy"
         sys.exit(-1)
 
     print "train_x shape:", train_x.shape
@@ -62,9 +62,10 @@ def K_means(dataset,k,iter=30):  #将dataset聚为k类
     centroid,label = kmeans2(train_x,k,iter)
 
     print 'cost:',cal_cluster_cost(train_x,centroid,label)
-    # from collections import Counter
-    # c = Counter(label)    #统计label的每个值的个数，即每个分类的类名和属于该分类的样本数
-    # print c
+
+    from collections import Counter
+    c = Counter(label)    #统计label的每个值的个数，即每个分类的类名和属于该分类的样本数
+    print c
 
     # lis = []
     # for i in range(0,len(label)):   #打印每个采样点所属的类和对应的文件名（以文件名为序））
@@ -74,8 +75,8 @@ def K_means(dataset,k,iter=30):  #将dataset聚为k类
     # for i,j,k in lis: #打印每个采样点所属的类和对应的文件名（以类名为序））
     #     print i,j
 
-    #将聚类结果写入文件，覆盖原来的label文件
-    #write_npy(label,dataset + "/aligned_train_ylabels.npy")
+    #将聚类结果写入文件
+    write_npy(label,dataset + "/aligned_train_ylabels_kmeans.npy")
     return [centroid,label]
 
 
@@ -115,7 +116,7 @@ def draw_cluser(dataset,centroid,label,k): #画出前k个聚类的曲线
                 'X' : x_value,
                 'Y' : centroid[prei],
                 'linewidth' : 3,
-                'color': colors[prei%len(colors)+1]
+                'color': colors[(prei+1)%len(colors)]
             }
             tool.addline(lineConf)  #打印聚类中心
             tool.plot()
@@ -136,17 +137,18 @@ def draw_cluser(dataset,centroid,label,k): #画出前k个聚类的曲线
             'color': colors[i%len(colors)]
         }
         
-        print 'Cluster No.',i,'has sample No.',j
-        print 'Line id',tool.addline(lineConf)    #添加线
+        # print 'Cluster No.',i,'has sample No.',j
+        # print 'Line id',tool.addline(lineConf)    #添加线
+        tool.addline(lineConf)    #添加线
 
     if clus_cnt < k:    #数据中的类数小于等于k，最后一个类会漏掉，打印最后一个
         lineConf = {
             'X' : x_value,
             'Y' : centroid[prei],
             'linewidth' : 3,
-            'color': colors[prei%len(colors)+1]
+            'color': colors[(prei+1)%len(colors)]
         }
-        tool.addline(lineConf)  #打印上一个聚类中心
+        tool.addline(lineConf)  #打印聚类中心
         tool.plot()
         tool.show()
 

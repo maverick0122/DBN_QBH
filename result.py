@@ -22,6 +22,8 @@ N_BATCHES_DATASET = 10 # number of batches in which we divide the dataset
                       # (to fit in the GPU memory, only 2Gb at home)
                       # 每个小批量数据包含的查询数
 N_FRAMES = 20   #特征抽取的窗长(帧数)
+DATASET = './data'   #训练数据和标注数据所在文件夹
+DBN_PICKLED_FILE = DATASET+'/dbn_qbh.pickle'   #DBN pickle文件的路径
 
 
 def compute_likelihoods_dbn(dbn, mat, depth=np.iinfo(int).max, normalize=True, unit=False):
@@ -39,7 +41,7 @@ def compute_likelihoods_dbn(dbn, mat, depth=np.iinfo(int).max, normalize=True, u
         mat = (mat - np.min(mat, 0)) / np.max(mat, 0)
 
     import theano.tensor as T
-    ret = np.ndarray((mat.shape[0], dbn.logLayer.b.shape[0].eval()), dtype="float32")
+    ret = np.ndarray((mat.shape[0], dbn.logLayer.b.shape[0].eval()), dtype="float64")
     from theano import shared#, scan
     # propagating through the deep belief net
     batch_size = mat.shape[0] / N_BATCHES_DATASET   #计算有多少组小批量数据
@@ -48,9 +50,9 @@ def compute_likelihoods_dbn(dbn, mat, depth=np.iinfo(int).max, normalize=True, u
     if depth < dbn.n_layers:
         max_layer = depth
         print 'max layer reduce to',max_layer
-        out_ret = np.ndarray((mat.shape[0], dbn.rbm_layers[max_layer].W.shape[1].eval()), dtype="float32")
+        out_ret = np.ndarray((mat.shape[0], dbn.rbm_layers[max_layer].W.shape[1].eval()), dtype="float64")
     else:
-        out_ret = np.ndarray((mat.shape[0], dbn.logLayer.b.shape[0].eval()), dtype="float32")
+        out_ret = np.ndarray((mat.shape[0], dbn.logLayer.b.shape[0].eval()), dtype="float64")
 
     #遍历每个小批量数据
     for ind in xrange(0, mat.shape[0]+1, batch_size):
@@ -96,7 +98,7 @@ def process(ofname, iqueryfname, idbnfname):
                 query = np.load(iqueryf)
         except:
             #读取失败，初始化为0
-            query = np.ndarray((0, N_FRAMES), dtype='float32')
+            query = np.ndarray((0, N_FRAMES), dtype='float64')
 
     #计算似然性（查询属于每个类的概率）
     print "computing likelihoods"
@@ -126,26 +128,39 @@ def process(ofname, iqueryfname, idbnfname):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 3:
-        if '--help' in sys.argv:
-            print usage
-            sys.exit(0)
-        args = dict(enumerate(sys.argv))
-        options = filter(lambda (ind, x): '--' in x[0:2], enumerate(sys.argv))
-        dbn_fname = None # DBN cPickle
-        if len(options): # we have options
-            for ind, option in options:
-                args.pop(ind)
-                if option == '--d':
-                    dbn_fname = args[ind+1]
-                    args.pop(ind+1)
-                    print "will use the following DBN to estimate states likelihoods", dbn_fname
-        else:
-            print "need to load DBN."
-            sys.exit(-1)
-        output_fname = args.values()[1]
-        input_query_fname = args.values()[2]
-        process(output_fname, input_query_fname, dbn_fname)
-    else:
-        print usage
-        sys.exit(-1)
+
+    dbn_fname = DBN_PICKLED_FILE
+    print "will use the following DBN to estimate states likelihoods", dbn_fname
+    output_fname = 'query_result.txt'
+    input_query_fname = DATASET+"/query_xdata.npy"
+    input_query_label_song_fname = DATASET+"/query_ylabels_song.npy"
+
+    train_label_song_fname = DATASET+"/aligned_train_ylabels_song.npy"
+    train_label_kmeans_fname = DATASET+"/aligned_train_ylabels_kmeans.npy"
+
+    process(output_fname, input_query_fname, dbn_fname)
+
+    #控制台
+    # if len(sys.argv) > 3:
+    #     if '--help' in sys.argv:
+    #         print usage
+    #         sys.exit(0)
+    #     args = dict(enumerate(sys.argv))
+    #     options = filter(lambda (ind, x): '--' in x[0:2], enumerate(sys.argv))
+    #     dbn_fname = None # DBN cPickle
+    #     if len(options): # we have options
+    #         for ind, option in options:
+    #             args.pop(ind)
+    #             if option == '--d':
+    #                 dbn_fname = args[ind+1]
+    #                 args.pop(ind+1)
+    #                 print "will use the following DBN to estimate states likelihoods", dbn_fname
+    #     else:
+    #         print "need to load DBN."
+    #         sys.exit(-1)
+    #     output_fname = args.values()[1]
+    #     input_query_fname = args.values()[2]
+    #     process(output_fname, input_query_fname, dbn_fname)
+    # else:
+    #     print usage
+    #     sys.exit(-1)

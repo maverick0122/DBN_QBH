@@ -59,14 +59,24 @@ def extract_data_from_txt(txt,npy):  #从txt样本文件抽取数据转换为npy
     print "shape:", x.shape
     print ''
 
-def extract_label_from_txt(txt,npy):  #从txt索引文件抽取标签转换为npy文件
+def extract_filename(fname):    #取文件名，去除文件路径和后缀
+    left = fname.rfind('\\')+1
+    right = fname.rfind('.')
+    if left <= 0:
+        left = 0
+    if right < 0:
+        right = len(fname)
+
+    return fname[left:right]
+
+
+def extract_label_from_txt(txt,npy,clus_col):  #从txt索引文件抽取标签转换为npy文件,clus_col为聚类属性所在的列,一般为文件名所在的列
     f = open(txt)
     y = []
     cnt = 0
     dim = 0 #维数
-    pre = ''    #前一个数据点类名(初始使用数据点所在的文件名)
+    clus = {}
     now = ''    #当前数据点类名
-    clus_cnt = 0    #类数
 
     for line in f:
         line = line.rstrip('\n')
@@ -75,16 +85,19 @@ def extract_label_from_txt(txt,npy):  #从txt索引文件抽取标签转换为np
         if cnt == 0:  #第一行是每个点的维数
             dim = (int)(line)
             print 'Dimention:',line
+            if clus_col >= dim:
+                print 'cluster column exceed Dimention.'
+                sys.exit(-1)
+
         else:   #余下的每行是每个点的值
             items = line.split()
             #print items
             if len(items)!=dim: #当前点的维数不正确
                 print 'line:',cnt,'has',len(items),'items instead of',dim
                 continue
-            now = items[1].decode('gbk')
-            if pre != now:
-                clus_cnt += 1
-                pre = now
+            now = items[clus_col].decode('gbk')
+            now = extract_filename(now)
+            clus[now] = 1
             #print now
             y.append(now)
             
@@ -95,12 +108,17 @@ def extract_label_from_txt(txt,npy):  #从txt索引文件抽取标签转换为np
 
     print "length:", len(y)
     print "shape:", yy.shape
-    print 'clus_cnt',clus_cnt
+    print 'clus_cnt',len(clus)
     print ''
 
 if __name__ == '__main__':
-    extract_data_from_txt('LSHVector.txt',DATASET+"/aligned_train_xdata.npy")
-    extract_label_from_txt('LSHIndex.txt',DATASET+"/aligned_train_ylabels.npy")
+    #将LSH点和索引转换为npy文件，作为训练集
+    extract_data_from_txt(DATASET+'/LSHVector.txt',DATASET+"/aligned_train_xdata.npy")
+    extract_label_from_txt(DATASET+'/LSHIndex.txt',DATASET+"/aligned_train_ylabels_song.npy",1)
+
+    #将线性伸缩后的查询LSH点转换为npy文件，作为查询集
+    extract_data_from_txt(DATASET+'/QueryLSHLSVector.txt',DATASET+"/query_xdata.npy")
+    extract_label_from_txt(DATASET+'/QueryLSHLSIndex.txt',DATASET+"/query_ylabels_song.npy",0)
 
     #复制文件
     # shutil.copyfile(DATASET+"/aligned_train_xdata.npy",DATASET+"/aligned_test_xdata.npy")
