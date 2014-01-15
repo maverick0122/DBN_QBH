@@ -113,15 +113,15 @@ def extract_label_from_txt(txt,npy,clus_col):  #从txt索引文件抽取标签�
 
 if __name__ == '__main__':
     #将LSH点和索引转换为npy文件，作为训练集
-    extract_data_from_txt(DATASET+'/LSHVector.txt',DATASET+"/aligned_train_xdata.npy")
-    extract_label_from_txt(DATASET+'/LSHIndex.txt',DATASET+"/aligned_train_ylabels_song.npy",1)
+    extract_data_from_txt(DATASET+'/LSHVector.txt',DATASET+"/train_xdata.npy")
+    extract_label_from_txt(DATASET+'/LSHIndex.txt',DATASET+"/train_ylabels_song.npy",1)
 
     #将线性伸缩后的查询LSH点转换为npy文件，作为查询集
     extract_data_from_txt(DATASET+'/QueryLSHLSVector.txt',DATASET+"/query_xdata.npy")
     extract_label_from_txt(DATASET+'/QueryLSHLSIndex.txt',DATASET+"/query_ylabels_song.npy",0)
 
     #复制文件
-    # shutil.copyfile(DATASET+"/aligned_train_xdata.npy",DATASET+"/aligned_test_xdata.npy")
-    # shutil.copyfile(DATASET+"/aligned_train_ylabels.npy",DATASET+"/aligned_test_ylabels.npy")
+    # shutil.copyfile(DATASET+"/train_xdata.npy",DATASET+"/test_xdata.npy")
+    # shutil.copyfile(DATASET+"/train_ylabels.npy",DATASET+"/test_ylabels.npy")
     #extract_from_txt('NLSHVector.txt','NLSHVector.npy')
     print 'Done'

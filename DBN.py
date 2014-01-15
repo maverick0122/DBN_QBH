@@ -331,8 +331,8 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
     """
 
     datasets = load_data(DATASET+dataset)
-    #读dataset文件夹下的训练集数据和标签aligned_train_xdata.npy,aligned_train_ylabels.npy
-    #测试集数据和标签aligned_test_xdata.npy,aligned_test_ylabels.npy
+    #读dataset文件夹下的训练集数据和标签train_xdata.npy,train_ylabels.npy
+    #测试集数据和标签test_xdata.npy,test_ylabels.npy
     #生成校验集数据和标签valid_set_x,valid_set_y
     train_set_x, train_set_y = datasets[0]
     valid_set_x, valid_set_y = datasets[1]

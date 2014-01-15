@@ -10,14 +10,14 @@ USE_CACHING = False # beware if you use RBM / GRBM or gammatones / speaker label
 def prep_data(dataset, scaling='normalize', pca_whiten=0):
     xname = "xdata"
     try:
-        train_x = np.load(dataset + "/aligned_train_xdata.npy")
-        train_y = np.load(dataset + "/aligned_train_ylabels_kmeans.npy")
+        train_x = np.load(dataset + "/train_xdata.npy")
+        train_y = np.load(dataset + "/train_ylabels_kmeans.npy")
 
     except:
         print >> sys.stderr, "you need the .npy python arrays"
         print >> sys.stderr, "you can produce them with txt_to_numpy.py"
-        print >> sys.stderr, dataset + "/aligned_train_xdata.npy"
-        print >> sys.stderr, dataset + "/aligned_train_ylabels_kmeans.npy"
+        print >> sys.stderr, dataset + "/train_xdata.npy"
+        print >> sys.stderr, dataset + "/train_ylabels_kmeans.npy"
         sys.exit(-1)
 
     print "train_x shape:", train_x.shape
@@ -51,7 +51,7 @@ def prep_data(dataset, scaling='normalize', pca_whiten=0):
     to_state = dict([(c.keys().index(k), k) for k in c.iterkeys()]) #to_state记录{类序号，类名}map
     # print to_int
     # print to_state
-    with open('to_int_and_to_state_dicts_tuple.pickle', 'w') as f:
+    with open(dataset+'/to_int_and_to_state_dicts_tuple.pickle', 'w') as f:
         cPickle.dump((to_int, to_state), f)
 
     print "preparing / int mapping Ys"
@@ -83,25 +83,25 @@ def load_data(dataset, scaling='normalize',
               'test_cv_frac': test_cv_frac,
               'theano_borrow?': BORROW,
               'use_caching?': USE_CACHING}
-    with open('prep_' + '_params.json', 'w') as f:
-        f.write(json.dumps(params))
+    # with open('prep_' + '_params.json', 'w') as f:
+    #     f.write(json.dumps(params))
 
 
     def prep_and_serialize():
         [train_x, train_y] = prep_data(dataset, scaling=scaling,
                 pca_whiten=pca_whiten)
-        with open('train_x_' + scaling + '.npy', 'w') as f:
+        with open(dataset+'/train_x_' + scaling + '.npy', 'w') as f:
             np.save(f, train_x)
-        with open('train_y_' + scaling + '.npy', 'w') as f:
+        with open(dataset+'/train_y_' + scaling + '.npy', 'w') as f:
             np.save(f, train_y)
         print ">>> Serialized all train/test tables"
         return [train_x, train_y]
 
     if USE_CACHING:
         try: # try to load from serialized filed, beware
-            with open('train_x_' + scaling + '.npy') as f:
+            with open(dataset+'/train_x_' + scaling + '.npy') as f:
                 train_x = np.load(f)
-            with open('train_y_' + scaling + '.npy') as f:
+            with open(dataset+'/train_y_' + scaling + '.npy') as f:
                 train_y = np.load(f)
         except: # do the whole preparation (normalization / padding)
             [train_x, train_y] = prep_and_serialize()

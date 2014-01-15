@@ -131,12 +131,15 @@ if __name__ == "__main__":
 
     dbn_fname = DBN_PICKLED_FILE
     print "will use the following DBN to estimate states likelihoods", dbn_fname
+    
     output_fname = 'query_result.txt'
     input_query_fname = DATASET+"/query_xdata.npy"
     input_query_label_song_fname = DATASET+"/query_ylabels_song.npy"
 
-    train_label_song_fname = DATASET+"/aligned_train_ylabels_song.npy"
-    train_label_kmeans_fname = DATASET+"/aligned_train_ylabels_kmeans.npy"
+    train_label_song_fname = DATASET+"/train_ylabels_song.npy"
+    train_label_kmeans_fname = DATASET+"/train_ylabels_kmeans.npy"
+
+    to_int_and_to_state_dicts_fname = DATASET+'/to_int_and_to_state_dicts_tuple.pickle'
 
     process(output_fname, input_query_fname, dbn_fname)
 
