@@ -1,4 +1,10 @@
 #-*- coding:utf-8 -*-   #允许文档中有中文
+"""
+建立DBN网络，进行查询，输出结果
+
+查询文件的数据维数必须与DBN数据维数相同
+"""
+
 import numpy as np
 import functools
 import sys, math
@@ -129,16 +135,18 @@ def process(ofname, iqueryfname, idbnfname):
 
 if __name__ == "__main__":
 
-    dbn_fname = DBN_PICKLED_FILE
+    dbn_fname = DBN_PICKLED_FILE    #DBN pickle文件的路径
     print "will use the following DBN to estimate states likelihoods", dbn_fname
     
-    output_fname = 'query_result.txt'
-    input_query_fname = DATASET+"/query_xdata.npy"
-    input_query_label_song_fname = DATASET+"/query_ylabels_song.npy"
+    output_fname = 'query_result.txt'   #输出文件，存储DBN分类结果
+    input_query_fname = DATASET+"/query_xdata.npy"  #查询文件，每行一个查询，维数必须为N_FRAMES
+                                                    #此处为经过LS之后的DBN查询数据，为按帧抽取的音高序列
+    input_query_label_song_fname = DATASET+"/query_ylabels_song.npy"    #查询的正确结果，存储每个查询所属的音频文件名
 
-    train_label_song_fname = DATASET+"/train_ylabels_song.npy"
-    train_label_kmeans_fname = DATASET+"/train_ylabels_kmeans.npy"
+    train_label_song_fname = DATASET+"/train_ylabels_song.npy"  #DBN训练数据标签，通过LSHIndex.txt生成
+    train_label_kmeans_fname = DATASET+"/train_ylabels_kmeans.npy"  #DBN训练数据标签，通过kmeans.py对LSHIndex.txt数据聚类生成
 
+    #存储两个字典，记录DBN标签的类名（此处为k-means聚类的序号）和类序号映射
     to_int_and_to_state_dicts_fname = DATASET+'/to_int_and_to_state_dicts_tuple.pickle'
 
     process(output_fname, input_query_fname, dbn_fname)
