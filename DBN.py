@@ -1,5 +1,16 @@
 #-*- coding:utf-8 -*-   #允许文档中有中文
 """
+读入数据集和标签，建立DBN模型
+
+数据集需满足的要求：
+1.所有数据维数相同，对应DBN模型的n_ins参数
+2.每条数据对应一个标签
+系统会将数据集分成训练集，测试集，校验集三部分
+
+标签需满足的要求：
+1.标签种类数必须和DBN输出维数n_outs相同
+2.标签内容必须是0-(n_outs-1)范围内的数字
+
 """
 import cPickle
 import gzip
@@ -332,7 +343,7 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
 
     datasets = load_data(DATASET+dataset)
     #读dataset文件夹下的训练集数据和标签train_xdata.npy,train_ylabels.npy
-    #测试集数据和标签test_xdata.npy,test_ylabels.npy
+    #生成测试集数据和标签test_xdata.npy,test_ylabels.npy
     #生成校验集数据和标签valid_set_x,valid_set_y
     train_set_x, train_set_y = datasets[0]
     valid_set_x, valid_set_y = datasets[1]

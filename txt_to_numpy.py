@@ -1,4 +1,12 @@
 #-*- coding:utf-8 -*-   #允许文档中有中文
+"""
+将原始txt数据文件转化为npy文件，作为dbn输入文件
+
+包括：
+1.转换训练数据的txt文件到npy文件
+2.转换标签索引的txt文件到npy文件
+"""
+
 import sys
 import numpy as np
 import shutil

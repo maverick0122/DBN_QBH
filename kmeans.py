@@ -1,4 +1,24 @@
 #-*- coding:utf-8 -*-   #允许文档中有中文
+"""
+用k-means对训练数据聚类
+
+聚类流程：
+读入训练数据（音高序列）train_xdata.npy，聚类数手动设定为音频文件数（歌曲数），迭代数设为100
+聚类结果存储在train_ylabels_kmeans.npy
+
+观察结果：
+读入每个训练数据（音高序列）所属的音频文件名（歌曲）train_ylabels_song.npy，观察聚类结果，包括：
+1.类分布是否均匀（每类包含数据数目差别不大）
+2.每个类中包含一些来自相同歌曲的旋律（同一歌曲的相似旋律被聚到一类）
+3.每首歌的旋律分属几个类
+
+初步观察结果基本符合上述要求
+
+画图呈现结果：
+调用MiniPlotTool.py画图工具，画出每个类的所有音高序列
+类中心的音高序列用不同颜色，观察聚类是否紧密
+"""
+
 import theano, copy, sys, json, cPickle
 import theano.tensor as T
 import numpy as np
@@ -55,10 +75,11 @@ def cal_cluster_cost(obs,centroid,label): #准则函数，计算所有聚类内�
         cost += cal_vector_dis(obs[i],centroid[label[i]])
     return cost
 
-def K_means(dataset,k,iter=30):  #将dataset聚为k类
+def K_means(dataset,k,iter=30):  #将dataset聚为k类iter为迭代次数
     train_x,train_y = prep_data(dataset)
     #train_x = whiten(train_x)
 
+    #k-means聚类，centroid为聚类中心值，label为聚类结果（每个数据的聚类号）
     centroid,label = kmeans2(train_x,k,iter)
 
     print 'cost:',cal_cluster_cost(train_x,centroid,label)
@@ -80,7 +101,8 @@ def K_means(dataset,k,iter=30):  #将dataset聚为k类
     return [centroid,label]
 
 
-def draw_cluser(dataset,centroid,label,k): #画出前k个聚类的曲线
+def draw_cluser(dataset,centroid,label,k):  #画出前k个聚类的曲线
+                                            #centroid为聚类中心值，label为聚类结果（每个数据的聚类号）
     if k<1:
         print >> sys.stderr, "you need print at least 1 cluster"
         sys.exit(-1)
@@ -109,7 +131,7 @@ def draw_cluser(dataset,centroid,label,k): #画出前k个聚类的曲线
     tool = MiniPlotTool(baseConfig) #初始化图
 
     for i,j in lis:
-        if i != prei:   #遍历到下一个聚类，打印当前聚类
+        if i != prei:   #遍历到下一个聚类，打印上一个聚类
             clus_cnt += 1
 
             lineConf = {
@@ -118,9 +140,9 @@ def draw_cluser(dataset,centroid,label,k): #画出前k个聚类的曲线
                 'linewidth' : 3,
                 'color': colors[(prei+1)%len(colors)]
             }
-            tool.addline(lineConf)  #打印聚类中心
+            tool.addline(lineConf)  #最后添加聚类中心
             tool.plot()
-            tool.show()
+            tool.show() #打印图
             if clus_cnt>=k:
                 break
 
@@ -128,7 +150,7 @@ def draw_cluser(dataset,centroid,label,k): #画出前k个聚类的曲线
                 'grid' : True,
                 'title': 'Cluster No. '+str(i)+' has '+str(c[i])+' sample(s)'
             }
-            tool = MiniPlotTool(baseConfig) #初始化图
+            tool = MiniPlotTool(baseConfig) #初始化下一个类的图
             prei = i
 
         lineConf = {
@@ -148,11 +170,12 @@ def draw_cluser(dataset,centroid,label,k): #画出前k个聚类的曲线
             'linewidth' : 3,
             'color': colors[(prei+1)%len(colors)]
         }
-        tool.addline(lineConf)  #打印聚类中心
+        tool.addline(lineConf)  #最后添加聚类中心
         tool.plot()
-        tool.show()
+        tool.show() #打印图
 
 if __name__ == '__main__':
-    centroid,label = K_means(DATASET,K,100)
-    draw_cluser(DATASET,centroid,label,10)
+    centroid,label = K_means(DATASET,K,100) #对DATASET数据聚类，聚类数K，迭代数100
+    draw_cluser(DATASET,centroid,label,10)  #画出前k个聚类的曲线
+                                            #centroid为聚类中心值，label为聚类结果（每个数据的聚类号）
     print 'Done'
