@@ -78,7 +78,7 @@ def compute_likelihoods_dbn(dbn, mat, depth=np.iinfo(int).max, normalize=True, u
 
 
 def process(ofname, iqueryfname, idbnfname):
-    '''处理函数，建立DBN网络，进行查询，输出结果
+    '''处理函数，读取DBN网络，进行查询，输出结果
     ofname: 输出文件
     iqueryfname: 查询文件，每行一个查询，维数必须为N_FRAMES
     idbnfname: DBN模型
@@ -141,15 +141,18 @@ if __name__ == "__main__":
     output_fname = 'query_result.txt'   #输出文件，存储DBN分类结果
     input_query_fname = DATASET+"/query_xdata.npy"  #查询文件，每行一个查询，维数必须为N_FRAMES
                                                     #此处为经过LS之后的DBN查询数据，为按帧抽取的音高序列
-    input_query_label_song_fname = DATASET+"/query_ylabels_song.npy"    #查询的正确结果，存储每个查询所属的音频文件名
-
-    train_label_song_fname = DATASET+"/train_ylabels_song.npy"  #DBN训练数据标签，通过LSHIndex.txt生成
-    train_label_kmeans_fname = DATASET+"/train_ylabels_kmeans.npy"  #DBN训练数据标签，通过kmeans.py对LSHIndex.txt数据聚类生成
 
     #存储两个字典，记录DBN标签的类名（此处为k-means聚类的序号）和类序号映射
     to_int_and_to_state_dicts_fname = DATASET+'/to_int_and_to_state_dicts_tuple.pickle'
 
+    #读取DBN网络，进行查询，输出结果（按查询对类的似然性从大到小对所属类排序）
     process(output_fname, input_query_fname, dbn_fname)
+
+    #观察结果所需的文件
+    input_query_label_song_fname = DATASET+"/query_ylabels_song.npy"    #查询的正确结果，存储每个查询所属的音频文件名
+    train_label_song_fname = DATASET+"/train_ylabels_song.npy"  #DBN训练数据标签，通过LSHIndex.txt生成
+    train_label_kmeans_fname = DATASET+"/train_ylabels_kmeans.npy"  #DBN训练数据标签，通过kmeans.py对LSHIndex.txt数据聚类生成
+
 
     #控制台
     # if len(sys.argv) > 3:

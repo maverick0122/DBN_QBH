@@ -416,7 +416,7 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
     patience_increase = 2.    # wait this much longer when a new best is
                               # found
                               # 找到新的最佳时,微调迭代次数变为现在的patience_increase倍
-    improvement_threshold = 0.995  # a relative improvement of this much is
+    improvement_threshold = 0.5  # a relative improvement of this much is
                                    # considered significant 
                                    # 新的校验损失低于原来校验损失的improvement_threshold倍
                                    # 才认为有意义

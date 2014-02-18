@@ -20,7 +20,7 @@ BORROW = True   # True makes it faster with the GPU
                 #设置共享变量时的参数，为true能在GPU上运行更快
 USE_CACHING = False # beware if you use RBM / GRBM or gammatones / speaker labels alternatively, set it to False
                     #为true时使用预先处理的训练数据和标签文件，而不对其进行预处理，直接划分训练集，验证集，测试集
-DTYPE = 'float64'   #训练数据类型
+DTYPE = 'int32'   #标签数据类型
 
 def prep_data(dataset, scaling='normalize'):    #预处理训练数据，scaling为处理方法
                                                 #预处理标签，转换为0-(clus_cnt-1)内的类号，clus_cnt为类数
@@ -63,7 +63,7 @@ def prep_data(dataset, scaling='normalize'):    #预处理训练数据，scaling
         cPickle.dump((to_int, to_state), f)
 
     print "preparing / int mapping Ys"
-    train_y_f = np.zeros(train_y.shape[0], dtype='float64')
+    train_y_f = np.zeros(train_y.shape[0], dtype=DTYPE)
     for i, e in enumerate(train_y):
         train_y_f[i] = to_int[e]    #记录每个样本对应的类号
         # print train_y_f[i]
@@ -72,7 +72,7 @@ def prep_data(dataset, scaling='normalize'):    #预处理训练数据，scaling
 
 
 def load_data(dataset, scaling='normalize',
-        valid_cv_frac=0.2, test_cv_frac=0.2,
+        valid_cv_frac=0.1, test_cv_frac=0.5,
         numpy_array_only=False):        #预处理训练数据和标签，用prep_data处理后按比例划分训练集，验证集，测试集
 
     """ 
@@ -127,20 +127,46 @@ def load_data(dataset, scaling='normalize',
     else:
         [train_x, train_y] = prep_and_serialize()
 
+    print 'train_x shape before cross validation:',train_x.shape
+    print 'train_y shape before cross validation:',train_y.shape
+    from collections import Counter
+    c = Counter(train_y)
+    print 'original train_y size:',len(c)
+    #print c
+
+
     #划分数据集，验证集，测试集
-    from sklearn import cross_validation
-    X_train1, X_validate, y_train1, y_validate = cross_validation.train_test_split(train_x, train_y, test_size=valid_cv_frac, random_state=0)
-    real_test_cv_frac = test_cv_frac / (1.0 - valid_cv_frac)
-    X_train, test_x, y_train, test_y = cross_validation.train_test_split(X_train1, y_train1, test_size=real_test_cv_frac, random_state=0)
+    from sklearn import cross_validation 
+    X_train, X_validate, y_train, y_validate = cross_validation.train_test_split(train_x, train_y, test_size=valid_cv_frac, random_state=0)
+    X_train1, X_test, y_train1, y_test = cross_validation.train_test_split(train_x, train_y, test_size=test_cv_frac, random_state=0) 
     
+    c_train = Counter(y_train)    #统计的每个值的个数，即每个分类的类名和属于该分类的样本数
+    c_valid = Counter(y_validate)
+    c_test = Counter(y_test)
+
+    print 'Counter y_train size:',len(c_train)
+    #print c_train
+    print 'Counter y_validate size:',len(c_valid)
+    #print c_valid
+    print 'Counter y_test size:',len(c_test)
+    #print c_test
+
+
+    print 'X_train shape',X_train.shape
+    print 'y_train shape',y_train.shape
+    print 'X_validate shape',X_validate.shape
+    print 'y_validate shape',y_validate.shape
+    print 'X_test shape',X_test.shape
+    print 'y_test shape',y_test.shape
+
     #生成最终数据，设置共享变量
     if numpy_array_only:
         train_set_x = X_train
         train_set_y = np.asarray(y_train, dtype=DTYPE)
         val_set_x = X_validate
         val_set_y = np.asarray(y_validate, dtype=DTYPE)
-        test_set_x = test_x
-        test_set_y = np.asarray(test_y, dtype=DTYPE)
+        test_set_x = X_test
+        test_set_y = np.asarray(y_test, dtype=DTYPE)
     else:
         train_set_x = theano.shared(X_train, borrow=BORROW)
         train_set_y = theano.shared(np.asarray(y_train, dtype=theano.config.floatX), borrow=BORROW)
@@ -148,10 +174,13 @@ def load_data(dataset, scaling='normalize',
         val_set_x = theano.shared(X_validate, borrow=BORROW)
         val_set_y = theano.shared(np.asarray(y_validate, dtype=theano.config.floatX), borrow=BORROW)
         val_set_y = T.cast(val_set_y, DTYPE)
-        test_set_x = theano.shared(test_x, borrow=BORROW)
-        test_set_y = theano.shared(np.asarray(test_y, dtype=theano.config.floatX), borrow=BORROW)
+        test_set_x = theano.shared(X_test, borrow=BORROW)
+        test_set_y = theano.shared(np.asarray(y_test, dtype=theano.config.floatX), borrow=BORROW)
         test_set_y = T.cast(test_set_y, DTYPE)
 
     return [(train_set_x, train_set_y), 
             (val_set_x, val_set_y),
             (test_set_x, test_set_y)] 
+
+if __name__ == '__main__':
+    load_data('./data')
