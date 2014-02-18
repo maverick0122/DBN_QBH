@@ -55,7 +55,7 @@ class DBN(object):
     '''
 
     def __init__(self, numpy_rng, theano_rng=None, n_ins=DIMENSION * N_FRAMES,
-                 hidden_layers_sizes=[1000, 1000], n_outs=N_OUTS):
+                 hidden_layers_sizes=[1024, 1024, 1024], n_outs=N_OUTS):
         """This class is made to support a variable number of layers.
 
         :type numpy_rng: numpy.random.RandomState
@@ -311,7 +311,7 @@ class DBN(object):
 
 
 def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
-             pretrain_lr=0.01, k=1, training_epochs=1000,
+             pretrain_lr=0.01, k=1, training_epochs=100,
              dataset='/mnist.pkl.gz', batch_size=10,
              outputfile=OUTPUTFILE):
     """
@@ -360,7 +360,7 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
     # construct the Deep Belief Network
     # 建立DBN
     dbn = DBN(numpy_rng=numpy_rng, n_ins=DIMENSION * N_FRAMES,
-              hidden_layers_sizes=[1000, 1000, 1000],
+              hidden_layers_sizes=[1024, 1024, 1024, 1024, 1024, 1024],
               n_outs=N_OUTS)
 
     #########################
@@ -416,7 +416,7 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
     patience_increase = 2.    # wait this much longer when a new best is
                               # found
                               # 找到新的最佳时,微调迭代次数变为现在的patience_increase倍
-    improvement_threshold = 0.5  # a relative improvement of this much is
+    improvement_threshold = 0.995  # a relative improvement of this much is
                                    # considered significant 
                                    # 新的校验损失低于原来校验损失的improvement_threshold倍
                                    # 才认为有意义
@@ -481,9 +481,9 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
                            test_score * 100.))
 
             #patient小于迭代次数，停止迭代
-            if patience <= iter:
-                done_looping = True
-                break
+            # if patience <= iter:
+            #     done_looping = True
+            #     break
 
     end_time = time.clock()
     print(('Optimization complete with best validation score of %f %%,'

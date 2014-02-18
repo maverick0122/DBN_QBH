@@ -37,8 +37,13 @@ def compute_likelihoods_dbn(dbn, mat, depth=np.iinfo(int).max, normalize=True, u
     Belief Network (stacked RBMs) in dbn, for each line of mat (input data) 
     depth is the depth of the DBN at which the likelihoods will pop out,
     if None, the full DBN is used"""
+    """根据给出的dbn模型，计算每个状态i的对数似然性
+    对输入数据mat的每一行，在DBN网络深度为depth时返回似然性
+    若depth设置为空使用整个DBN网络
+    """
     # first normalize or put in the unit ([0-1]) interval
     # TODO do that only if we did not do that at the full scale of the corpus
+    # 查询数据预处理，注意要和prep_qbh.py中对训练数据的处理方法一致
     if normalize:
         # if the first layer of the DBN is a Gaussian RBM, we need to normalize mat
         mat = (mat - np.mean(mat, 0)) / np.std(mat, 0)
@@ -138,14 +143,14 @@ if __name__ == "__main__":
     dbn_fname = DBN_PICKLED_FILE    #DBN pickle文件的路径
     print "will use the following DBN to estimate states likelihoods", dbn_fname
     
-    output_fname = 'query_result.txt'   #输出文件，存储DBN分类结果
+    output_fname = DATASET+'/query_result.txt'   #输出文件，存储DBN分类结果
     input_query_fname = DATASET+"/query_xdata.npy"  #查询文件，每行一个查询，维数必须为N_FRAMES
                                                     #此处为经过LS之后的DBN查询数据，为按帧抽取的音高序列
 
     #存储两个字典，记录DBN标签的类名（此处为k-means聚类的序号）和类序号映射
     to_int_and_to_state_dicts_fname = DATASET+'/to_int_and_to_state_dicts_tuple.pickle'
 
-    #读取DBN网络，进行查询，输出结果（按查询对类的似然性从大到小对所属类排序）
+    #读取DBN网络，进行查询，输出结果（按似然性从大到小对所属类排序）
     process(output_fname, input_query_fname, dbn_fname)
 
     #观察结果所需的文件
