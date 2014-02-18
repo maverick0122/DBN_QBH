@@ -108,8 +108,7 @@ def load_data(dataset, scaling='normalize',
 
 
     def prep_and_serialize():
-        [train_x, train_y] = prep_data(dataset, scaling=scaling,
-                pca_whiten=pca_whiten)
+        [train_x, train_y] = prep_data(dataset, scaling=scaling)
         with open(dataset+'/train_x_' + scaling + '.npy', 'w') as f:
             np.save(f, train_x)
         with open(dataset+'/train_y_' + scaling + '.npy', 'w') as f:

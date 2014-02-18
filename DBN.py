@@ -313,7 +313,7 @@ class DBN(object):
 def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
              pretrain_lr=0.01, k=1, training_epochs=1000,
              dataset='/mnist.pkl.gz', batch_size=10,
-             outputfile):
+             outputfile=OUTPUTFILE):
     """
 
     :type finetune_lr: float
@@ -497,4 +497,4 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
         cPickle.dump(dbn, f)
 
 if __name__ == '__main__':
-    test_DBN(dataset='',outputfile=OUTPUTFILE)
+    test_DBN(dataset='')
