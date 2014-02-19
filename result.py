@@ -11,7 +11,8 @@ import sys, math
 import cPickle
 import os
 sys.path.append(os.getcwd())
-
+from collections import Counter
+import DBN
 import sys
 reload(sys)
 sys.setdefaultencoding('utf-8') #允许打印unicode字符
@@ -137,6 +138,81 @@ def process(ofname, iqueryfname, idbnfname):
         for line in ans:
             of.write(line)
 
+def show_result(query_xdata_fname = DATASET+"/query_xdata.npy",
+                output_fname = DATASET+'/query_result.txt',
+                query_ylabels_song_fname = DATASET+"/query_ylabels_song.npy",
+                train_xdata_fname = DATASET+"/train_xdata.npy",
+                train_ylabels_song_fname = DATASET+"/train_ylabels_song.npy",
+                train_ylabels_kmeans_fname = DATASET+"/train_ylabels_kmeans.npy",
+                to_int_and_to_state_dicts_fname = DATASET+'/to_int_and_to_state_dicts_tuple.pickle',
+                candidate_size = 100):
+    '''
+    query_xdata_fname: 查询文件，每行一个查询，维数必须为N_FRAMES，此处为经过LS之后的DBN查询数据，为按帧抽取的音高序列
+    output_fname: 输出文件，存储DBN分类结果，每行为按似然性从大到小对所属类排序
+    query_ylabels_song_fname: 查询的正确结果，存储每个查询所属的音频文件名
+    train_xdata_fname: DBN训练数据，每行存储一个音高序列
+    train_ylabels_song_fname: DBN训练数据标签，存储每个数据所属的音频文件名
+    train_ylabels_kmeans_fname: DBN训练数据标签，存储每个数据所属的聚类号
+    to_int_and_to_state_dicts_fname: 存储两个字典，记录标签的类名（此处为k-means聚类号）和类序号映射
+    candidate_size: 每个查询的候选集大小
+    '''
+
+    candidate = []      #存储每个查询的候选
+    correct_candidate = []  #存储每个查询的正确候选（和查询属于同一首歌的候选）
+
+    #to_int记录{类名,类序号}map,to_state记录{类序号，类名}map
+    #此处类序号就是dbn_clus_result中存储的序号，类名就是k-means聚类号
+    with open(to_int_and_to_state_dicts_fname) as titsf:
+        to_int,to_state = cPickle.load(titsf)
+    print to_int
+
+    clus_to_xdata = []   #存储每个聚类包含的训练数据序号
+
+    #读入训练数据所属聚类号
+    train_ylabels_kmeans = np.load(train_ylabels_kmeans_fname) 
+    c_train_ylabels_kmeans = Counter(train_ylabels_kmeans)  #存储每个聚类包含的数据数
+
+    #开辟空间，列表每个元素为一个空子列表，用于存储这个聚类包含的训练数据序号
+    for i in range(0,len(c_train_ylabels_kmeans)):  
+        clus_to_xdata.append([])
+
+    for i, e in enumerate(train_ylabels_kmeans):
+        re = to_int[e]
+        train_ylabels_kmeans[i] = re    #将类名（k-means聚类号）转换为类序号
+        clus_to_xdata[re].append(i)     #记录每个聚类包含的训练数据序号
+
+    print clus_to_xdata
+
+    #读入训练数据所在的音频文件名（歌曲名）
+    train_ylabels_song = np.load(train_ylabels_song_fname)
+
+    #读入查询数据所在的音频文件名（歌曲名）
+    query_ylabels_song = np.load(query_ylabels_song_fname)
+
+    #读DBN分类结果
+    of = open(output_fname, 'r')
+    query_cnt = 0
+
+    for line in of:
+        line = line.rstrip('\n')
+        items = line.split()
+        items = [int(i) for i in items]
+
+        candidate.append([])    #开辟一个空列表，存储当前查询的候选集
+
+        for i in items:
+            candidate[query_cnt].extend(clus_to_xdata[i])   #按顺序将聚类包含的数据序号加入候选集
+            if len(candidate[query_cnt]) >= candidate_size: #候选集大小满足要求
+                break
+
+        correct_candidate.append([])    #开辟一个空列表，存储当前查询的正确候选集（属于同一首歌）
+
+        for i in candidate[query_cnt]:
+            if train_ylabels_song[i] == query_ylabels_song[query_cnt]:  #和正确歌曲匹配
+                correct_candidate[query_cnt].append(i)  #加入正确候选集
+
+        query_cnt += 1
+    
 
 if __name__ == "__main__":
 
@@ -144,21 +220,15 @@ if __name__ == "__main__":
     print "will use the following DBN to estimate states likelihoods", dbn_fname
     
     output_fname = DATASET+'/query_result.txt'   #输出文件，存储DBN分类结果
-    input_query_fname = DATASET+"/query_xdata.npy"  #查询文件，每行一个查询，维数必须为N_FRAMES
+    query_xdata_fname = DATASET+"/query_xdata.npy"  #查询文件，每行一个查询，维数必须为N_FRAMES
                                                     #此处为经过LS之后的DBN查询数据，为按帧抽取的音高序列
 
-    #存储两个字典，记录DBN标签的类名（此处为k-means聚类的序号）和类序号映射
-    to_int_and_to_state_dicts_fname = DATASET+'/to_int_and_to_state_dicts_tuple.pickle'
-
     #读取DBN网络，进行查询，输出结果（按似然性从大到小对所属类排序）
-    process(output_fname, input_query_fname, dbn_fname)
+    process(output_fname, query_xdata_fname, dbn_fname)
 
-    #观察结果所需的文件
-    input_query_label_song_fname = DATASET+"/query_ylabels_song.npy"    #查询的正确结果，存储每个查询所属的音频文件名
-    train_label_song_fname = DATASET+"/train_ylabels_song.npy"  #DBN训练数据标签，通过LSHIndex.txt生成
-    train_label_kmeans_fname = DATASET+"/train_ylabels_kmeans.npy"  #DBN训练数据标签，通过kmeans.py对LSHIndex.txt数据聚类生成
+    show_result()
 
-
+    print 'Done'
     #控制台
     # if len(sys.argv) > 3:
     #     if '--help' in sys.argv:
