@@ -211,6 +211,10 @@ def show_result(query_xdata_fname = DATASET+"/query_xdata.npy",
             if train_ylabels_song[i] == query_ylabels_song[query_cnt]:  #和正确歌曲匹配
                 correct_candidate[query_cnt].append(i)  #加入正确候选集
 
+        #正确候选在候选集中的比例
+        print 'query no.',query_cnt,'correct candidate',len(correct_candidate[query_cnt]),
+        'total candidate',len(candidate[query_cnt])
+
         query_cnt += 1
     
 

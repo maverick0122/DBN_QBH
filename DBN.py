@@ -310,8 +310,8 @@ class DBN(object):
         return train_fn, valid_score, test_score
 
 
-def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
-             pretrain_lr=0.01, k=1, training_epochs=200,
+def test_DBN(finetune_lr=0.1, pretraining_epochs=1,
+             pretrain_lr=0.01, k=1, training_epochs=2,
              dataset='/mnist.pkl.gz', batch_size=10,
              outputfile=OUTPUTFILE):
     """
@@ -493,6 +493,7 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
                           os.path.split(__file__)[1] +
                           ' ran for %.2fm' % ((end_time - start_time)
                                               / 60.))
+
     with open(outputfile, 'w') as f:
         cPickle.dump(dbn, f)
 
