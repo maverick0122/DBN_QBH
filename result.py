@@ -215,6 +215,7 @@ def show_result(query_xdata_fname = DATASET+"/query_xdata.npy",
         print 'query no.',qi,', correct candidate',len(correct_candidate[qi]),', total candidate',len(candidate[qi])
     
 
+
 if __name__ == "__main__":
 
     dbn_fname = DBN_PICKLED_FILE    #DBN pickle文件的路径

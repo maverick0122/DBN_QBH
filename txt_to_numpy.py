@@ -77,6 +77,13 @@ def extract_filename(fname):    #取文件名，去除文件路径和后缀
 
     return fname[left:right]
 
+def extract_songname(fname):    #取歌曲名，去除歌手名（格式为“歌手-歌曲”）
+    left = fname.rfind('-')+1
+    if left <= 0:
+        left = 0
+
+    return fname[left:]
+
 
 def extract_label_from_txt(txt,npy,clus_col):  #从txt索引文件抽取标签转换为npy文件,clus_col为聚类属性所在的列,一般为文件名所在的列
     f = open(txt)
@@ -105,6 +112,8 @@ def extract_label_from_txt(txt,npy,clus_col):  #从txt索引文件抽取标签�
                 continue
             now = items[clus_col].decode('gbk')
             now = extract_filename(now)
+            now = extract_songname(now)
+            #print now
             clus[now] = 1
             #print now
             y.append(now)
