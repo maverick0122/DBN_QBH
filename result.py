@@ -12,7 +12,7 @@ import cPickle
 import os
 sys.path.append(os.getcwd())
 from collections import Counter
-import DBN
+from DBN import DBN
 import sys
 reload(sys)
 sys.setdefaultencoding('utf-8') #允许打印unicode字符
@@ -31,6 +31,7 @@ N_BATCHES_DATASET = 10 # number of batches in which we divide the dataset
 N_FRAMES = 20   #特征抽取的窗长(帧数)
 DATASET = './data'   #训练数据和标注数据所在文件夹
 DBN_PICKLED_FILE = DATASET+'/dbn_qbh.pickle'   #DBN pickle文件的路径
+DTYPE = 'int32'   #标签数据类型
 
 
 def compute_likelihoods_dbn(dbn, mat, depth=np.iinfo(int).max, normalize=True, unit=False):
@@ -93,7 +94,7 @@ def process(ofname, iqueryfname, idbnfname):
     #建立DBN网络模型
     dbn = None
     if idbnfname != None:
-        with open(idbnfname) as idbnf:
+        with open(idbnfname,'r') as idbnf:
             dbn = cPickle.load(idbnf)
         #partial函数：先将不变的参数dbn导入函数，防止每次调用函数重复导入
         likelihoods_computer = functools.partial(compute_likelihoods_dbn, dbn)
@@ -119,27 +120,28 @@ def process(ofname, iqueryfname, idbnfname):
         likelihoods = likelihoods_computer(query)
         #mean_dbns = np.mean(tmp_likelihoods, 0)
         #tmp_likelihoods *= (mean_gmms / mean_dbns)
-        print likelihoods
-        print likelihoods.shape
+        print 'likelihoods',likelihoods
+        print 'likelihoods shape',likelihoods.shape
         #print likelihoods[0]
         #print likelihoods[0].shape
 
     #存储结果
-    ans = []
+    ans = np.ndarray((0, likelihoods.shape[1]), dtype=DTYPE)
     for likelihood in likelihoods:
         lis = [(likelihood[i],i) for i in range(0,len(likelihood))]
         lis.sort()  
         lis.reverse()   #按概率从大到小排序
-        ans.append([lis[i][1] for i in range(0,len(lis))])  #将排序的类号加入结果数组
+        tmp = np.array([[lis[i][1] for i in range(0,len(lis))]])
+        tmp = tmp.astype(int)
+        ans = np.append(ans, tmp, axis=0)   #设置axis，否则会变成一维数组
 
-
+    print 'ans',ans
+    print 'ans shape',ans.shape
     #保存查询结果
-    with open(ofname, 'w') as of:
-        for line in ans:
-            of.write(line)
+    np.save(ofname,ans)
 
 def show_result(query_xdata_fname = DATASET+"/query_xdata.npy",
-                output_fname = DATASET+'/query_result.txt',
+                output_fname = DATASET+'/query_result.npy',
                 query_ylabels_song_fname = DATASET+"/query_ylabels_song.npy",
                 train_xdata_fname = DATASET+"/train_xdata.npy",
                 train_ylabels_song_fname = DATASET+"/train_ylabels_song.npy",
@@ -164,7 +166,8 @@ def show_result(query_xdata_fname = DATASET+"/query_xdata.npy",
     #此处类序号就是dbn_clus_result中存储的序号，类名就是k-means聚类号
     with open(to_int_and_to_state_dicts_fname) as titsf:
         to_int,to_state = cPickle.load(titsf)
-    print to_int
+
+    #print 'to_int',to_int
 
     clus_to_xdata = []   #存储每个聚类包含的训练数据序号
 
@@ -181,7 +184,8 @@ def show_result(query_xdata_fname = DATASET+"/query_xdata.npy",
         train_ylabels_kmeans[i] = re    #将类名（k-means聚类号）转换为类序号
         clus_to_xdata[re].append(i)     #记录每个聚类包含的训练数据序号
 
-    print clus_to_xdata
+    #print 'clus_to_xdata',clus_to_xdata
+    print 'number in each cluster',[[i,len(clus_to_xdata[i])] for i in range(0,len(clus_to_xdata))]
 
     #读入训练数据所在的音频文件名（歌曲名）
     train_ylabels_song = np.load(train_ylabels_song_fname)
@@ -190,32 +194,25 @@ def show_result(query_xdata_fname = DATASET+"/query_xdata.npy",
     query_ylabels_song = np.load(query_ylabels_song_fname)
 
     #读DBN分类结果
-    of = open(output_fname, 'r')
-    query_cnt = 0
+    output = np.load(output_fname)
 
-    for line in of:
-        line = line.rstrip('\n')
-        items = line.split()
-        items = [int(i) for i in items]
-
+    for qi in range(0,len(output)):
+        items = output[qi]  #当前查询的分类结果
         candidate.append([])    #开辟一个空列表，存储当前查询的候选集
 
         for i in items:
-            candidate[query_cnt].extend(clus_to_xdata[i])   #按顺序将聚类包含的数据序号加入候选集
-            if len(candidate[query_cnt]) >= candidate_size: #候选集大小满足要求
+            candidate[qi].extend(clus_to_xdata[i])   #按顺序将聚类包含的数据序号加入候选集
+            if len(candidate[qi]) >= candidate_size: #候选集大小满足要求
                 break
 
         correct_candidate.append([])    #开辟一个空列表，存储当前查询的正确候选集（属于同一首歌）
 
-        for i in candidate[query_cnt]:
-            if train_ylabels_song[i] == query_ylabels_song[query_cnt]:  #和正确歌曲匹配
-                correct_candidate[query_cnt].append(i)  #加入正确候选集
+        for i in candidate[qi]:
+            if train_ylabels_song[i] == query_ylabels_song[qi]:  #和正确歌曲匹配
+                correct_candidate[qi].append(i)  #加入正确候选集
 
         #正确候选在候选集中的比例
-        print 'query no.',query_cnt,'correct candidate',len(correct_candidate[query_cnt]),
-        'total candidate',len(candidate[query_cnt])
-
-        query_cnt += 1
+        print 'query no.',qi,', correct candidate',len(correct_candidate[qi]),', total candidate',len(candidate[qi])
     
 
 if __name__ == "__main__":
@@ -223,7 +220,7 @@ if __name__ == "__main__":
     dbn_fname = DBN_PICKLED_FILE    #DBN pickle文件的路径
     print "will use the following DBN to estimate states likelihoods", dbn_fname
     
-    output_fname = DATASET+'/query_result.txt'   #输出文件，存储DBN分类结果
+    output_fname = DATASET+'/query_result.npy'   #输出文件，存储DBN分类结果
     query_xdata_fname = DATASET+"/query_xdata.npy"  #查询文件，每行一个查询，维数必须为N_FRAMES
                                                     #此处为经过LS之后的DBN查询数据，为按帧抽取的音高序列
 

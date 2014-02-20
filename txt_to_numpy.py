@@ -55,8 +55,8 @@ def extract_data_from_txt(txt,npy):  #从txt样本文件抽取数据转换为npy
             if len(items)!=dim: #当前点的维数不正确
                 print 'line:',cnt,'has',len(items),'items instead of',dim
                 continue
-            tmp = np.array([items])  
-            tmp = tmp.astype('f')
+            tmp = np.array([items])
+            tmp = tmp.astype('f')   #数据转换为float类型
             #print tmp
             x = np.append(x, tmp, axis=0)   #设置axis，否则会变成一维数组
         cnt += 1

@@ -310,8 +310,8 @@ class DBN(object):
         return train_fn, valid_score, test_score
 
 
-def test_DBN(finetune_lr=0.1, pretraining_epochs=1,
-             pretrain_lr=0.01, k=1, training_epochs=2,
+def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
+             pretrain_lr=0.01, k=1, training_epochs=300,
              dataset='/mnist.pkl.gz', batch_size=10,
              outputfile=OUTPUTFILE):
     """
@@ -336,7 +336,7 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=1,
                     数据文件路径
     :type batch_size: int
     :param batch_size: the size of a minibatch
-                        小批量数据大小
+                        小批量数据大小（运算时多少条数据合成一块进行运算）
     :type outputfile: string
     :param outputfile: 输出的DBN pickle的路径
     """
@@ -360,7 +360,7 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=1,
     # construct the Deep Belief Network
     # 建立DBN
     dbn = DBN(numpy_rng=numpy_rng, n_ins=DIMENSION * N_FRAMES,
-              hidden_layers_sizes=[1024, 1024, 1024, 1024, 1024, 1024],
+              hidden_layers_sizes=[1024,1024,1024,1024,1024,1024],
               n_outs=N_OUTS)
 
     #########################
