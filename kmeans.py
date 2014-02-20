@@ -28,7 +28,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8') #允许打印unicode字符
 
 DATASET = './data'  #需要聚类数据所在文件夹
-K = 60  #聚类数
+K = 100  #聚类数，设定为跟歌曲数一个量级即可
 
 def prep_data(dataset): #从npy文件读入数据
     try:

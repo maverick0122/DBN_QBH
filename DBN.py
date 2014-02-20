@@ -311,7 +311,7 @@ class DBN(object):
 
 
 def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
-             pretrain_lr=0.01, k=1, training_epochs=300,
+             pretrain_lr=0.01, k=1, training_epochs=200,
              dataset='/mnist.pkl.gz', batch_size=10,
              outputfile=OUTPUTFILE):
     """
@@ -393,6 +393,9 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
             print 'Pre-training layer %i, epoch %d, cost ' % (i, epoch),
             print numpy.mean(c)
 
+        with open(DATASET+'/dbn_pre-train_layer'+i+'.pickle', 'w') as f:
+            cPickle.dump(dbn, f)
+
     end_time = time.clock()
     print >> sys.stderr, ('The pretraining code for file ' +
                           os.path.split(__file__)[1] +
@@ -439,6 +442,11 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
     # 迭代进行微调
     while (epoch < training_epochs) and (not done_looping):
         epoch = epoch + 1
+
+        if epoch % 50 == 0:
+            with open(DATASET+'/dbn_fine-tuning_epoch'+epoch+'.pickle', 'w') as f:
+                cPickle.dump(dbn, f)
+
         # 遍历每个小批量数据
         for minibatch_index in xrange(n_train_batches):
 
