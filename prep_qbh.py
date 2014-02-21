@@ -12,15 +12,12 @@
 
 """
 
-import theano, copy, sys, json, cPickle
+from global_para import *
 import theano.tensor as T
-import numpy as np
 
-BORROW = True   # True makes it faster with the GPU
-                #设置共享变量时的参数，为true能在GPU上运行更快
 USE_CACHING = False # beware if you use RBM / GRBM or gammatones / speaker labels alternatively, set it to False
                     #为true时使用预先处理的训练数据和标签文件，而不对其进行预处理，直接划分训练集，验证集，测试集
-Y_DTYPE = 'int32'   #标签数据类型
+
 
 def prep_data(dataset, scaling='normalize'):    #预处理训练数据，scaling为处理方法
                                                 #预处理标签，转换为0-(clus_cnt-1)内的类号，clus_cnt为类数
@@ -73,7 +70,7 @@ def prep_data(dataset, scaling='normalize'):    #预处理训练数据，scaling
 
 def load_data(dataset, scaling='normalize',
         valid_cv_frac=0.1, test_cv_frac=0.5,
-        numpy_array_only=False):        #预处理训练数据和标签，用prep_data处理后按比例划分训练集，验证集，测试集
+        numpy_array_only=NUMPY_ARRAY_ONLY):        #预处理训练数据和标签，用prep_data处理后按比例划分训练集，验证集，测试集
 
     """ 
     params:

@@ -5,17 +5,13 @@
 查询文件的数据维数必须与DBN数据维数相同
 """
 
-import numpy as np
 import functools
-import sys, math
-import cPickle
+import sys,math
 import os
 sys.path.append(os.getcwd())
 from collections import Counter
 from DBN import DBN
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8') #允许打印unicode字符
+from global_para import *
 
 usage = """
 python result.py OUTPUT[.txt] INPUT_QUERY
@@ -24,15 +20,6 @@ python result.py OUTPUT[.txt] INPUT_QUERY
 Exclusive uses of these options:
     --d followed by a pickled DBN file
 """
-
-N_BATCHES_DATASET = 10 # number of batches in which we divide the dataset 
-                      # (to fit in the GPU memory, only 2Gb at home)
-                      # 每个小批量数据包含的查询数
-N_FRAMES = 20   #特征抽取的窗长(帧数)
-DATASET = './data'   #训练数据和标注数据所在文件夹
-DBN_PICKLED_FILE = DATASET+'/dbn_qbh.pickle'   #DBN pickle文件的路径
-X_DTYPE = 'float64' #训练数据类型
-Y_DTYPE = 'int32'   #标签数据类型
 
 
 def compute_likelihoods_dbn(dbn, mat, depth=np.iinfo(int).max, normalize=True, unit=False):

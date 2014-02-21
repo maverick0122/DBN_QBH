@@ -7,15 +7,9 @@
 2.转换标签索引的txt文件到npy文件
 """
 
-import sys
-import numpy as np
 import shutil
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8') #允许打印unicode字符
+from global_para import *
 
-DATASET = './data'
-X_DTYPE = 'float64'
 
 def isfloat(str):   #判断字符串是否是浮点数
     if str.isdigit():

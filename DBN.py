@@ -12,28 +12,18 @@
 2.标签内容必须是0-(n_outs-1)范围内的数字
 
 """
-import cPickle
+
 import gzip
 import os
-import sys
 import time
-
 import numpy
-
-import theano
 import theano.tensor as T
 from theano.tensor.shared_randomstreams import RandomStreams
-
 from logistic_sgd import LogisticRegression #, load_data
 from mlp import HiddenLayer
 from rbm import RBM
 from prep_qbh import load_data
-
-DATASET = './data'   #训练数据和标注数据所在文件夹
-OUTPUTFILE = DATASET+'/dbn_qbh.pickle'   #输出的DBN pickle文件的路径
-N_FRAMES = 20   #特征抽取的窗长(帧数)
-DIMENSION = 1  #每帧的数据维数
-N_OUTS = 60    #输出长度(分类数)
+from global_para import *
 
 
 class DBN(object):
@@ -208,7 +198,7 @@ class DBN(object):
         learning_rate = T.scalar('lr')  # learning rate to use
 
         # number of batches
-        n_batches = train_set_x.get_value(borrow=True).shape[0] / batch_size
+        n_batches = train_set_x.get_value(borrow=BORROW).shape[0] / batch_size
         # begining of a batch, given `index`
         batch_begin = index * batch_size
         # ending of a batch given `index`
@@ -264,9 +254,9 @@ class DBN(object):
         (test_set_x, test_set_y) = datasets[2]
 
         # compute number of minibatches for training, validation and testing
-        n_valid_batches = valid_set_x.get_value(borrow=True).shape[0]
+        n_valid_batches = valid_set_x.get_value(borrow=BORROW).shape[0]
         n_valid_batches /= batch_size
-        n_test_batches = test_set_x.get_value(borrow=True).shape[0]
+        n_test_batches = test_set_x.get_value(borrow=BORROW).shape[0]
         n_test_batches /= batch_size
 
         index = T.lscalar('index')  # index to a [mini]batch
@@ -310,10 +300,10 @@ class DBN(object):
         return train_fn, valid_score, test_score
 
 
-def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
-             pretrain_lr=0.01, k=1, training_epochs=200,
-             dataset='/mnist.pkl.gz', batch_size=10,
-             outputfile=OUTPUTFILE):
+def test_DBN(finetune_lr=0.1, pretraining_epochs=PRETRAIN_EPOCHS,
+             pretrain_lr=0.01, k=1, training_epochs=FINETUNE_EPOCHS,
+             dataset='/mnist.pkl.gz', batch_size=N_BATCHES_DATASET,
+             outputfile=DBN_PICKLED_FILE):
     """
 
     :type finetune_lr: float
@@ -351,7 +341,7 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
 
     # compute number of minibatches for training, validation and testing
     # 计算小批量数据数量
-    n_train_batches = train_set_x.get_value(borrow=True).shape[0] / batch_size
+    n_train_batches = train_set_x.get_value(borrow=BORROW).shape[0] / batch_size
 
     # numpy random generator
     # numpy随机数生成器
@@ -393,8 +383,8 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
             print 'Pre-training layer %i, epoch %d, cost ' % (i, epoch),
             print numpy.mean(c)
 
-        with open(DATASET+'/dbn_pre-train_layer'+i+'.pickle', 'w') as f:
-            cPickle.dump(dbn, f)
+        # with open(DATASET+'/dbn_pre-train_layer'+i+'.pickle', 'w') as f:
+        #     cPickle.dump(dbn, f)
 
     end_time = time.clock()
     print >> sys.stderr, ('The pretraining code for file ' +
@@ -443,9 +433,9 @@ def test_DBN(finetune_lr=0.1, pretraining_epochs=100,
     while (epoch < training_epochs) and (not done_looping):
         epoch = epoch + 1
 
-        if epoch % 50 == 0:
-            with open(DATASET+'/dbn_fine-tuning_epoch'+epoch+'.pickle', 'w') as f:
-                cPickle.dump(dbn, f)
+        # if epoch % 50 == 0:
+        #     with open(DATASET+'/dbn_fine-tuning_epoch'+epoch+'.pickle', 'w') as f:
+        #         cPickle.dump(dbn, f)
 
         # 遍历每个小批量数据
         for minibatch_index in xrange(n_train_batches):
