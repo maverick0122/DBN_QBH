@@ -147,7 +147,7 @@ def show_result(query_xdata_fname = DATASET+"/query_xdata.npy",
                 train_ylabels_song_fname = DATASET+"/train_ylabels_song.npy",
                 train_ylabels_kmeans_fname = DATASET+"/train_ylabels_kmeans.npy",
                 to_int_and_to_state_dicts_fname = DATASET+'/to_int_and_to_state_dicts_tuple.pickle',
-                candidate_size = 100):
+                candidate_size = 100, isDraw = True,drawnum=10):
     '''
     query_xdata_fname: 查询文件，每行一个查询，维数必须为N_FRAMES，此处为经过LS之后的DBN查询数据，为按帧抽取的音高序列
     output_fname: 输出文件，存储DBN分类结果，每行为按似然性从大到小对所属类排序
@@ -157,6 +157,8 @@ def show_result(query_xdata_fname = DATASET+"/query_xdata.npy",
     train_ylabels_kmeans_fname: DBN训练数据标签，存储每个数据所属的聚类号
     to_int_and_to_state_dicts_fname: 存储两个字典，记录标签的类名（此处为k-means聚类号）和类序号映射
     candidate_size: 每个查询的候选集大小
+    isDraw: 是否打印查询数据和对应的正确候选的训练数据
+    drawnum: 打印的查询数据数
     '''
 
     candidate = []      #存储每个查询的候选
@@ -173,7 +175,7 @@ def show_result(query_xdata_fname = DATASET+"/query_xdata.npy",
 
     #读入训练数据所属聚类号
     train_ylabels_kmeans = np.load(train_ylabels_kmeans_fname) 
-    c_train_ylabels_kmeans = Counter(train_ylabels_kmeans)  #存储每个聚类包含的数据数
+    c_train_ylabels_kmeans = Counter(train_ylabels_kmeans)  #存储训练数据中每个聚类包含的数据数
 
     #开辟空间，列表每个元素为一个空子列表，用于存储这个聚类包含的训练数据序号
     for i in range(0,len(c_train_ylabels_kmeans)):  
@@ -189,9 +191,13 @@ def show_result(query_xdata_fname = DATASET+"/query_xdata.npy",
 
     #读入训练数据所在的音频文件名（歌曲名）
     train_ylabels_song = np.load(train_ylabels_song_fname)
+    c_train_ylabels_song = Counter(train_ylabels_song)  #存储训练数据中每首歌包含的数据数
+    print 'train data:',len(train_ylabels_song),'samples from',len(c_train_ylabels_song),'songs'
 
     #读入查询数据所在的音频文件名（歌曲名）
     query_ylabels_song = np.load(query_ylabels_song_fname)
+    c_query_ylabels_song = Counter(query_ylabels_song)  #存储查询数据中每首歌包含的数据数
+    print 'query data:',len(query_ylabels_song),'samples from',len(c_query_ylabels_song),'songs'
 
     #读DBN分类结果
     output = np.load(output_fname)
@@ -206,14 +212,57 @@ def show_result(query_xdata_fname = DATASET+"/query_xdata.npy",
                 break
 
         correct_candidate.append([])    #开辟一个空列表，存储当前查询的正确候选集（属于同一首歌）
+        correct_songname = query_ylabels_song[qi]   #当前查询所属的音频文件名（正确歌曲名）
 
-        for i in candidate[qi]:
-            if train_ylabels_song[i] == query_ylabels_song[qi]:  #和正确歌曲匹配
+        for i in candidate[qi]:     #遍历候选集
+            if train_ylabels_song[i] == correct_songname:  #候选所属歌曲和正确歌曲匹配
                 correct_candidate[qi].append(i)  #加入正确候选集
 
         #正确候选在候选集中的比例
         print 'query no.',qi,', correct candidate',len(correct_candidate[qi]),', total candidate',len(candidate[qi])
-    
+        #正确歌曲名以及其在训练集中的样本数
+        print 'correct song',correct_songname,'has',c_train_ylabels_song[correct_songname],'sample(s) in train set'
+
+    #打印查询数据和对应的正确候选的训练数据
+    if isDraw:
+        from MiniPlotTool import *
+        train_xdata = np.load(train_xdata_fname)    #读入训练数据
+        query_xdata = np.load(query_xdata_fname)    #读入查询数据
+
+        x_value = [i for i in range(0,len(train_xdata[0]))] #画图的x值，0-len，len为采样点维数
+        colors = ['red','green','yellow','blue','black','cyan','magenta']   #每个聚类的颜色选择
+
+        draw_cnt = 0    #记录已经打印的查询数
+        for qi in range(0,len(query_xdata)):
+
+            if draw_cnt >= drawnum:
+                break
+
+            if(len(correct_candidate[qi]) > 0):
+                baseConfig = {
+                    'grid' : True,
+                    'title': 'Query No.'+str(qi)+'has'+str(c[prei])+'correct candidate(s)'
+                }
+                tool = MiniPlotTool(baseConfig) #初始化图
+                lineConf = {
+                    'X' : x_value,
+                    'Y' : query_xdata[qi],
+                    'linewidth' : 3,
+                    'color': colors[(qi+1)%len(colors)]
+                }
+                tool.addline(lineConf)  #添加查询的音高曲线
+
+                for i in correct_candidate[qi]:
+                    lineConf = {
+                        'X' : x_value,
+                        'Y' : train_xdata[i],
+                        'color': colors[qi%len(colors)]
+                    }
+                    tool.addline(lineConf)  #添加正确歌曲对应训练数据的音高曲线
+                tool.plot()
+                tool.show() #打印图
+
+                draw_cnt += 1
 
 
 if __name__ == "__main__":
