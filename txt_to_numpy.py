@@ -15,6 +15,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8') #允许打印unicode字符
 
 DATASET = './data'
+X_DTYPE = 'float64'
 
 def isfloat(str):   #判断字符串是否是浮点数
     if str.isdigit():
@@ -33,7 +34,7 @@ def isfloat(str):   #判断字符串是否是浮点数
     return True
 
 
-def extract_data_from_txt(txt,npy):  #从txt样本文件抽取数据转换为npy文件
+def extract_data_from_txt(txt,npy,dtype):  #从txt样本文件抽取数据转换为npy文件
     f = open(txt)
     x = []
     cnt = 0
@@ -46,7 +47,7 @@ def extract_data_from_txt(txt,npy):  #从txt样本文件抽取数据转换为npy
         if cnt == 0:  #第一行是每个点的维数
             dim = (int)(line)
             print 'Dimention:',line
-            x = np.ndarray((0, dim), dtype='float64')
+            x = np.ndarray((0, dim), dtype=dtype)
         else:   #余下的每行是每个点的值
             items = line.split()
             for i in range(0,len(items)):
@@ -130,11 +131,11 @@ def extract_label_from_txt(txt,npy,clus_col):  #从txt索引文件抽取标签�
 
 if __name__ == '__main__':
     #将LSH点和索引转换为npy文件，作为训练集
-    extract_data_from_txt(DATASET+'/LSHVector.txt',DATASET+"/train_xdata.npy")
+    extract_data_from_txt(DATASET+'/LSHVector.txt',DATASET+"/train_xdata.npy",X_DTYPE)
     extract_label_from_txt(DATASET+'/LSHIndex.txt',DATASET+"/train_ylabels_song.npy",1)
 
     #将线性伸缩后的查询LSH点转换为npy文件，作为查询集
-    extract_data_from_txt(DATASET+'/QueryLSHLSVector.txt',DATASET+"/query_xdata.npy")
+    extract_data_from_txt(DATASET+'/QueryLSHLSVector.txt',DATASET+"/query_xdata.npy",X_DTYPE)
     extract_label_from_txt(DATASET+'/QueryLSHLSIndex.txt',DATASET+"/query_ylabels_song.npy",0)
 
     #复制文件

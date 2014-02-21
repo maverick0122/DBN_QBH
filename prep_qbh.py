@@ -20,7 +20,7 @@ BORROW = True   # True makes it faster with the GPU
                 #设置共享变量时的参数，为true能在GPU上运行更快
 USE_CACHING = False # beware if you use RBM / GRBM or gammatones / speaker labels alternatively, set it to False
                     #为true时使用预先处理的训练数据和标签文件，而不对其进行预处理，直接划分训练集，验证集，测试集
-DTYPE = 'int32'   #标签数据类型
+Y_DTYPE = 'int32'   #标签数据类型
 
 def prep_data(dataset, scaling='normalize'):    #预处理训练数据，scaling为处理方法
                                                 #预处理标签，转换为0-(clus_cnt-1)内的类号，clus_cnt为类数
@@ -63,7 +63,7 @@ def prep_data(dataset, scaling='normalize'):    #预处理训练数据，scaling
         cPickle.dump((to_int, to_state), f)
 
     print "preparing / int mapping Ys"
-    train_y_f = np.zeros(train_y.shape[0], dtype=DTYPE)
+    train_y_f = np.zeros(train_y.shape[0], dtype=Y_DTYPE)
     for i, e in enumerate(train_y):
         train_y_f[i] = to_int[e]    #记录每个样本对应的类号
         # print train_y_f[i]
@@ -162,21 +162,21 @@ def load_data(dataset, scaling='normalize',
     #生成最终数据，设置共享变量
     if numpy_array_only:
         train_set_x = X_train
-        train_set_y = np.asarray(y_train, dtype=DTYPE)
+        train_set_y = np.asarray(y_train, dtype=Y_DTYPE)
         val_set_x = X_validate
-        val_set_y = np.asarray(y_validate, dtype=DTYPE)
+        val_set_y = np.asarray(y_validate, dtype=Y_DTYPE)
         test_set_x = X_test
-        test_set_y = np.asarray(y_test, dtype=DTYPE)
+        test_set_y = np.asarray(y_test, dtype=Y_DTYPE)
     else:
         train_set_x = theano.shared(X_train, borrow=BORROW)
         train_set_y = theano.shared(np.asarray(y_train, dtype=theano.config.floatX), borrow=BORROW)
-        train_set_y = T.cast(train_set_y, DTYPE)
+        train_set_y = T.cast(train_set_y, Y_DTYPE)
         val_set_x = theano.shared(X_validate, borrow=BORROW)
         val_set_y = theano.shared(np.asarray(y_validate, dtype=theano.config.floatX), borrow=BORROW)
-        val_set_y = T.cast(val_set_y, DTYPE)
+        val_set_y = T.cast(val_set_y, Y_DTYPE)
         test_set_x = theano.shared(X_test, borrow=BORROW)
         test_set_y = theano.shared(np.asarray(y_test, dtype=theano.config.floatX), borrow=BORROW)
-        test_set_y = T.cast(test_set_y, DTYPE)
+        test_set_y = T.cast(test_set_y, Y_DTYPE)
 
     return [(train_set_x, train_set_y), 
             (val_set_x, val_set_y),

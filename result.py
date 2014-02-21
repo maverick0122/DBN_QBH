@@ -31,7 +31,8 @@ N_BATCHES_DATASET = 10 # number of batches in which we divide the dataset
 N_FRAMES = 20   #特征抽取的窗长(帧数)
 DATASET = './data'   #训练数据和标注数据所在文件夹
 DBN_PICKLED_FILE = DATASET+'/dbn_qbh.pickle'   #DBN pickle文件的路径
-DTYPE = 'int32'   #标签数据类型
+X_DTYPE = 'float64' #训练数据类型
+Y_DTYPE = 'int32'   #标签数据类型
 
 
 def compute_likelihoods_dbn(dbn, mat, depth=np.iinfo(int).max, normalize=True, unit=False):
@@ -54,7 +55,7 @@ def compute_likelihoods_dbn(dbn, mat, depth=np.iinfo(int).max, normalize=True, u
         mat = (mat - np.min(mat, 0)) / np.max(mat, 0)
 
     import theano.tensor as T
-    ret = np.ndarray((mat.shape[0], dbn.logLayer.b.shape[0].eval()), dtype="float64")
+    ret = np.ndarray((mat.shape[0], dbn.logLayer.b.shape[0].eval()), dtype=X_DTYPE)
     from theano import shared#, scan
     # propagating through the deep belief net
     batch_size = mat.shape[0] / N_BATCHES_DATASET   #计算有多少组小批量数据
@@ -63,9 +64,9 @@ def compute_likelihoods_dbn(dbn, mat, depth=np.iinfo(int).max, normalize=True, u
     if depth < dbn.n_layers:
         max_layer = depth
         print 'max layer reduce to',max_layer
-        out_ret = np.ndarray((mat.shape[0], dbn.rbm_layers[max_layer].W.shape[1].eval()), dtype="float64")
+        out_ret = np.ndarray((mat.shape[0], dbn.rbm_layers[max_layer].W.shape[1].eval()), dtype=X_DTYPE)
     else:
-        out_ret = np.ndarray((mat.shape[0], dbn.logLayer.b.shape[0].eval()), dtype="float64")
+        out_ret = np.ndarray((mat.shape[0], dbn.logLayer.b.shape[0].eval()), dtype=X_DTYPE)
 
     #遍历每个小批量数据
     for ind in xrange(0, mat.shape[0]+1, batch_size):
@@ -111,7 +112,7 @@ def process(ofname, iqueryfname, idbnfname):
                 query = np.load(iqueryf)
         except:
             #读取失败，初始化为0
-            query = np.ndarray((0, N_FRAMES), dtype='float64')
+            query = np.ndarray((0, N_FRAMES), dtype=X_DTYPE)
 
     #计算似然性（查询属于每个类的概率）
     print "computing likelihoods"
@@ -126,7 +127,7 @@ def process(ofname, iqueryfname, idbnfname):
         #print likelihoods[0].shape
 
     #存储结果
-    ans = np.ndarray((0, likelihoods.shape[1]), dtype=DTYPE)
+    ans = np.ndarray((0, likelihoods.shape[1]), dtype=Y_DTYPE)
     for likelihood in likelihoods:
         lis = [(likelihood[i],i) for i in range(0,len(likelihood))]
         lis.sort()  
