@@ -95,11 +95,13 @@ def process(ofname, iqueryfname, idbnfname):
         try: 
             print "loading query from pickled file", iqueryfname
             #读取查询
-            with open(iqueryfname) as iqueryf:
-                query = np.load(iqueryf)
+            query = np.load(iqueryfname)
         except:
             #读取失败，初始化为0
             query = np.ndarray((0, N_FRAMES), dtype=X_DTYPE)
+            print 'Fail to read query file:',iqueryfname
+
+    print 'query shape:',query.shape
 
     #计算似然性（查询属于每个类的概率）
     print "computing likelihoods"
@@ -107,8 +109,7 @@ def process(ofname, iqueryfname, idbnfname):
     if dbn != None:
         likelihoods = likelihoods_computer(query)
         #mean_dbns = np.mean(tmp_likelihoods, 0)
-        #tmp_likelihoods *= (mean_gmms / mean_dbns)
-        print 'likelihoods',likelihoods
+        #print 'likelihoods',likelihoods
         print 'likelihoods shape',likelihoods.shape
         #print likelihoods[0]
         #print likelihoods[0].shape
@@ -123,7 +124,7 @@ def process(ofname, iqueryfname, idbnfname):
         tmp = tmp.astype(int)
         ans = np.append(ans, tmp, axis=0)   #设置axis，否则会变成一维数组
 
-    print 'ans',ans
+    #print 'ans',ans
     print 'ans shape',ans.shape
     #保存查询结果
     np.save(ofname,ans)
@@ -190,6 +191,10 @@ def show_result(query_xdata_fname = DATASET+"/query_xdata.npy",
     #读DBN分类结果
     output = np.load(output_fname)
 
+    print 'query no. | candidate(correct/total) | correct song | correct sampls in train set'
+
+    has_correct_num = 0     #记录有正确候选的查询数
+
     for qi in range(0,len(output)):
         items = output[qi]  #当前查询的分类结果
         candidate.append([])    #开辟一个空列表，存储当前查询的候选集
@@ -206,12 +211,14 @@ def show_result(query_xdata_fname = DATASET+"/query_xdata.npy",
             if train_ylabels_song[i] == correct_songname:  #候选所属歌曲和正确歌曲匹配
                 correct_candidate[qi].append(i)  #加入正确候选集
 
-        #正确候选在候选集中的比例
-        print 'query no.',qi,', correct candidate',len(correct_candidate[qi]),', total candidate',len(candidate[qi])
-        #正确歌曲名以及其在训练集中的样本数
-        print 'correct song',correct_songname,'has',c_train_ylabels_song[correct_songname],'sample(s) in train set'
+        if len(correct_candidate[qi])>0:
+            has_correct_num += 1
 
-    #打印查询数据和对应的正确候选的训练数据
+        #正确候选在候选集中的比例,正确歌曲名以及其在训练集中的样本数
+        print qi,len(correct_candidate[qi]),'/',len(candidate[qi]),correct_songname,c_train_ylabels_song[correct_songname]
+
+    print has_correct_num,'/',len(candidate),'query(s) has correct candidates'
+    #打印查询数据和对应的正确候选的训练数据的音高曲线
     if isDraw:
         from MiniPlotTool import *
         train_xdata = np.load(train_xdata_fname)    #读入训练数据
@@ -229,7 +236,7 @@ def show_result(query_xdata_fname = DATASET+"/query_xdata.npy",
             if(len(correct_candidate[qi]) > 0):
                 baseConfig = {
                     'grid' : True,
-                    'title': 'Query No.'+str(qi)+'has'+str(c[prei])+'correct candidate(s)'
+                    'title': 'Query No.'+str(qi)+' has '+str(len(correct_candidate[qi]))+' correct candidate(s)'
                 }
                 tool = MiniPlotTool(baseConfig) #初始化图
                 lineConf = {

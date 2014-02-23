@@ -25,5 +25,5 @@ DBN_PICKLED_FILE = DATASET+'/dbn_qbh.pickle'   #DBN pickle文件的路径
 X_DTYPE = 'float64' #训练数据类型
 Y_DTYPE = 'int32'   #标签数据类型
 
-PRETRAIN_EPOCHS = 1     #DBN建立时的预训练迭代次数
-FINETUNE_EPOCHS = 1     #DBN建立时的微调迭代次数
+PRETRAIN_EPOCHS = 100     #DBN建立时的预训练迭代次数
+FINETUNE_EPOCHS = 200     #DBN建立时的微调迭代次数
