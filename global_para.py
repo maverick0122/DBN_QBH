@@ -9,7 +9,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8') #允许打印unicode字符
 
 DATASET = './data'  #需要聚类数据所在文件夹
-K = 100  #聚类数，设定为跟歌曲数一个量级即可
+K = 500  #聚类数，设定为跟歌曲数一个量级即可
 BORROW = True   # True makes it faster with the GPU
                 #设置共享变量时的参数，为true能在GPU上运行更快
 NUMPY_ARRAY_ONLY = False     #设置为False时共享变量，用于GPU
@@ -26,4 +26,4 @@ X_DTYPE = 'float64' #训练数据类型
 Y_DTYPE = 'int32'   #标签数据类型
 
 PRETRAIN_EPOCHS = 100     #DBN建立时的预训练迭代次数
-FINETUNE_EPOCHS = 200     #DBN建立时的微调迭代次数
+FINETUNE_EPOCHS = 300     #DBN建立时的微调迭代次数
