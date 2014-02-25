@@ -18,9 +18,8 @@ N_FRAMES = 20   #特征抽取的窗长(帧数)
 DIMENSION = 1   #每帧的数据维数
 N_OUTS = K      #输出长度(分类数)，因为使用聚类结果作为标签，所以要和聚类数相同
 
-N_BATCHES_DATASET = 10 # number of batches in which we divide the dataset 
-                      # (to fit in the GPU memory, only 2Gb at home)
-                      # 每个小批量数据包含的查询数
+BATCH_SIZE = 10 #训练时每个小批量数据的大小
+
 DBN_PICKLED_FILE = DATASET+'/dbn_qbh.pickle'   #DBN pickle文件的路径
 X_DTYPE = 'float64' #训练数据类型
 Y_DTYPE = 'int32'   #标签数据类型

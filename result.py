@@ -21,6 +21,10 @@ Exclusive uses of these options:
     --d followed by a pickled DBN file
 """
 
+N_BATCHES_DATASET = 8 # number of batches in which we divide the dataset 
+                      # (to fit in the GPU memory, only 2Gb at home)
+                      #将查询分成多少个份，以便放入GPU计算
+
 
 def compute_likelihoods_dbn(dbn, mat, depth=np.iinfo(int).max, normalize=True, unit=False):
     """compute the log-likelihoods of each states i according to the Deep 
@@ -45,7 +49,7 @@ def compute_likelihoods_dbn(dbn, mat, depth=np.iinfo(int).max, normalize=True, u
     ret = np.ndarray((mat.shape[0], dbn.logLayer.b.shape[0].eval()), dtype=X_DTYPE)
     from theano import shared#, scan
     # propagating through the deep belief net
-    batch_size = mat.shape[0] / N_BATCHES_DATASET   #计算有多少组小批量数据
+    batch_size = mat.shape[0] / N_BATCHES_DATASET   #计算小批量数据大小
     max_layer = dbn.n_layers
     out_ret = None
     if depth < dbn.n_layers:
