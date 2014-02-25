@@ -25,14 +25,14 @@ from global_para import *
 
 def prep_data(dataset): #从npy文件读入数据
     try:
-        train_x = np.load(dataset + "/train_xdata.npy")
-        train_y = np.load(dataset + "/train_ylabels_song.npy")
+        train_x = np.load(dataset + TRAIN_X_FILE)
+        train_y = np.load(dataset + TRAIN_Y_SONG)
 
     except:
         print >> sys.stderr, "you need the .npy python arrays"
         print >> sys.stderr, "you can produce them with txt_to_numpy.py"
-        print >> sys.stderr, dataset + "/train_xdata.npy"
-        print >> sys.stderr, dataset + "/train_ylabels_song.npy"
+        print >> sys.stderr, dataset + TRAIN_X_FILE
+        print >> sys.stderr, dataset + TRAIN_Y_SONG
         sys.exit(-1)
 
     print "train_x shape:", train_x.shape
@@ -90,7 +90,7 @@ def K_means(dataset,k,iter=30):  #将dataset聚为k类iter为迭代次数
     #     print i,j
 
     #将聚类结果写入文件
-    write_npy(label,dataset + "/train_ylabels_kmeans.npy")
+    write_npy(label,dataset + TRAIN_Y_KMEANS)
     return [centroid,label]
 
 
