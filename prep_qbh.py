@@ -57,7 +57,7 @@ def prep_data(dataset, scaling='normalize'):    #预处理训练数据，scaling
     to_state = dict([(c.keys().index(k), k) for k in c.iterkeys()]) #to_state记录{类序号，类名}map
     # print to_int
     # print to_state
-    with open(dataset+'/to_int_and_to_state_dicts_tuple.pickle', 'w') as f:
+    with open(dataset+TO_INT_AND_TO_STATE_DICTS_FILE, 'w') as f:
         cPickle.dump((to_int, to_state), f)
 
     print "preparing / int mapping Ys"

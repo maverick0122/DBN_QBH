@@ -22,6 +22,9 @@ TRAIN_Y_SONG = "/train_ylabels_song.npy"    #歌曲标签文件
 TRAIN_Y_KMEANS = "/train_ylabels_kmeans.npy"    #聚类标签文件
 TRAIN_Y_FILE = TRAIN_Y_SONG  #训练集标签文件名
 
+#存储两个字典，记录标签的类名（此处为k-means聚类号）和类序号映射
+TO_INT_AND_TO_STATE_DICTS_FILE = '/to_int_and_to_state_dicts_tuple.pickle'
+
 N_OUTS = 200      #输出长度(分类数)，若使用聚类结果作为标签，设置为聚类数
                 #若使用所属歌曲作为标签，设置为歌曲数
 
@@ -33,3 +36,7 @@ Y_DTYPE = 'int32'   #标签数据类型
 
 PRETRAIN_EPOCHS = 100     #DBN建立时的预训练迭代次数
 FINETUNE_EPOCHS = 200     #DBN建立时的微调迭代次数
+
+QUERY_X_FILE = "/query_xdata.npy"   #查询数据文件名
+QUERY_Y_FILE = "/query_ylabels_song.npy"  #查询数据标签文件名
+QUERY_RESULT_FILE = "/query_result.npy"    #查询结果文件

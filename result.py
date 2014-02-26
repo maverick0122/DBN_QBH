@@ -133,21 +133,21 @@ def process(ofname, iqueryfname, idbnfname):
     #保存查询结果
     np.save(ofname,ans)
 
-def show_result(query_xdata_fname = DATASET+"/query_xdata.npy",
-                output_fname = DATASET+'/query_result.npy',
-                query_ylabels_song_fname = DATASET+"/query_ylabels_song.npy",
-                train_xdata_fname = DATASET+"/train_xdata.npy",
-                train_ylabels_song_fname = DATASET+"/train_ylabels_song.npy",
-                train_ylabels_kmeans_fname = DATASET+"/train_ylabels_kmeans.npy",
-                to_int_and_to_state_dicts_fname = DATASET+'/to_int_and_to_state_dicts_tuple.pickle',
+def show_result(query_xdata_fname = DATASET+QUERY_X_FILE,
+                output_fname = DATASET+QUERY_RESULT_FILE,
+                query_ylabels_fname = DATASET+QUERY_Y_FILE,
+                train_xdata_fname = DATASET+TRAIN_X_FILE,
+                train_ylabels_song_fname = DATASET+TRAIN_Y_SONG,
+                train_ylabels_fname = DATASET+TRAIN_Y_FILE,
+                to_int_and_to_state_dicts_fname = DATASET+TO_INT_AND_TO_STATE_DICTS_FILE,
                 candidate_size = 10, isDraw = False, drawnum = 10):
     '''
     query_xdata_fname: 查询文件，每行一个查询，维数必须为N_FRAMES，此处为经过LS之后的DBN查询数据，为按帧抽取的音高序列
     output_fname: 输出文件，存储DBN分类结果，每行为按似然性从大到小对所属类排序
-    query_ylabels_song_fname: 查询的正确结果，存储每个查询所属的音频文件名
+    query_ylabels_fname: 查询的正确结果，存储每个查询所属的音频文件名
     train_xdata_fname: DBN训练数据，每行存储一个音高序列
     train_ylabels_song_fname: DBN训练数据标签，存储每个数据所属的音频文件名
-    train_ylabels_kmeans_fname: DBN训练数据标签，存储每个数据所属的聚类号
+    train_ylabels_fname: DBN训练数据标签
     to_int_and_to_state_dicts_fname: 存储两个字典，记录标签的类名（此处为k-means聚类号）和类序号映射
     candidate_size: 每个查询的候选集大小
     isDraw: 是否打印查询数据和对应的正确候选的训练数据
@@ -165,21 +165,21 @@ def show_result(query_xdata_fname = DATASET+"/query_xdata.npy",
 
     #print 'to_int',to_int
 
-    #读入训练数据所属聚类号
-    train_ylabels_kmeans = np.load(train_ylabels_kmeans_fname) 
+    #读入训练数据标签
+    train_ylabels = np.load(train_ylabels_fname) 
 
     clus_to_xdata = []   #存储每个聚类包含的训练数据序号
 
     for i in range(0,N_OUTS):   #开辟空间
         clus_to_xdata.append([])
 
-    for i, e in enumerate(train_ylabels_kmeans):
+    for i, e in enumerate(train_ylabels):
         re = to_int[e]
-        train_ylabels_kmeans[i] = re    #将类名（k-means聚类号）转换为类序号
-        clus_to_xdata[re].append(i)     #记录每个聚类包含的训练数据序号
+        train_ylabels[i] = re    #将类名转换为类序号
+        clus_to_xdata[re].append(i)     #记录每类包含的训练数据序号
 
     #print 'clus_to_xdata',clus_to_xdata
-    print 'cluster no. | samples'  #打印每个聚类的训练数据数
+    print 'label no. | samples'  #打印每类的训练数据数
     for i in range(0,len(clus_to_xdata)):
         print i,len(clus_to_xdata[i])
 
@@ -190,7 +190,7 @@ def show_result(query_xdata_fname = DATASET+"/query_xdata.npy",
     print 'train data:',len(train_ylabels_song),'samples from',train_songs,'songs'
 
     #读入查询数据所在的音频文件名（歌曲名）
-    query_ylabels_song = np.load(query_ylabels_song_fname)
+    query_ylabels_song = np.load(query_ylabels_fname)
     c_query_ylabels_song = Counter(query_ylabels_song)  #存储查询数据中每首歌包含的数据数
     query_songs = len(c_query_ylabels_song)     #查询数据来自多少歌曲（一首歌可能有多个人哼唱）
     print 'query data:',len(query_ylabels_song),'samples from',query_songs,'songs'
@@ -261,14 +261,21 @@ def show_result(query_xdata_fname = DATASET+"/query_xdata.npy",
     print 'query song | query samples | candidate(correct/total) | correct train sampls'
 
     has_correct_wav = 0      #记录有正确候选的音频数
+    sum_correct_wav = 0     #正确候选总数
+    sum_candidate_wav = 0   #总候选数
     query_wavs = len(query_song)    #记录总音频数
     for i in range(0,query_wavs):
         if len(correct_wav[i]) > 0:
             has_correct_wav += 1
+        sum_correct_wav += len(correct_wav[i])
+        sum_candidate_wav += len(candidate_wav[i])
         print query_song[i],'\t',query_samples[i],'\t',len(correct_wav[i]),'/',len(candidate_wav[i]),'\t',c_train_ylabels_song[query_song[i]]
 
     #有正确候选的音频数/总音频数
     print has_correct_wav,'/',query_wavs,'wav(s) has correct candidates'
+
+    #正确候选占总候选的比例
+    print sum_correct_wav,'/',sum_candidate_wav,'correct candidates',sum_correct_wav*100./sum_candidate_wav,'% in each wav'
 
     #打印查询数据和对应的正确候选的训练数据的音高曲线
     if isDraw:
