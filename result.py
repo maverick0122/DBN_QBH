@@ -274,7 +274,13 @@ def show_result(query_xdata_fname = DATASET+QUERY_X_FILE,
     #有正确候选的音频数/总音频数
     print has_correct_wav,'/',query_wavs,'wav(s) has correct candidates'
 
-    #正确候选占总候选的比例
+    #每个音频的平均正确候选数（统计每个音频的查询候选时，合并来自不同查询的相同候选）
+    print 'average correct candidates / wav:',(float)(sum_correct_wav/query_wavs)
+
+    #每个音频的平均候选数（统计每个音频的查询候选时，合并来自不同查询的相同候选）
+    print 'average candidates / wav:',(float)(sum_candidate_wav/query_wavs)
+
+    #正确候选占总候选的比例（每个wav的正确候选数/总候选数）
     print sum_correct_wav,'/',sum_candidate_wav,'correct candidates',sum_correct_wav*100./sum_candidate_wav,'% in each wav'
 
     #打印查询数据和对应的正确候选的训练数据的音高曲线
