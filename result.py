@@ -140,7 +140,7 @@ def show_result(query_xdata_fname = DATASET+QUERY_X_FILE,
                 train_ylabels_song_fname = DATASET+TRAIN_Y_SONG,
                 train_ylabels_fname = DATASET+TRAIN_Y_FILE,
                 to_int_and_to_state_dicts_fname = DATASET+TO_INT_AND_TO_STATE_DICTS_FILE,
-                candidate_size = 10, isDraw = False, drawnum = 10):
+                candidate_size = CANDIDATE_SIZE, isDraw = False, drawnum = 10):
     '''
     query_xdata_fname: 查询文件，每行一个查询，维数必须为N_FRAMES，此处为经过LS之后的DBN查询数据，为按帧抽取的音高序列
     output_fname: 输出文件，存储DBN分类结果，每行为按似然性从大到小对所属类排序

@@ -187,6 +187,6 @@ def draw_cluser(dataset,centroid,label,k):  #画出前k个聚类的曲线
 
 if __name__ == '__main__':
     centroid,label = K_means(DATASET,K,100) #对DATASET数据聚类，聚类数K，迭代数100
-    draw_cluser(DATASET,centroid,label,10)  #画出前k个聚类的曲线
+    #draw_cluser(DATASET,centroid,label,10)  #画出前k个聚类的曲线
                                             #centroid为聚类中心值，label为聚类结果（每个数据的聚类号）
     print 'Done'

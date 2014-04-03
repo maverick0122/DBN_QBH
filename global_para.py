@@ -9,7 +9,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8') #允许打印unicode字符
 
 DATASET = './data'  #需要聚类数据所在文件夹
-K = 400  #聚类数，设定为跟歌曲数一个量级即可
+K = 200  #聚类数，设定为跟歌曲数一个量级即可
 BORROW = True   # True makes it faster with the GPU
                 #设置共享变量时的参数，为true能在GPU上运行更快
 NUMPY_ARRAY_ONLY = False     #设置为False时共享变量，用于GPU
@@ -19,7 +19,7 @@ DIMENSION = 1   #每帧的数据维数
 
 TRAIN_X_FILE = "/train_xdata.npy"   #训练集数据文件名
 TRAIN_Y_SONG = "/train_ylabels_song.npy"    #歌曲标签文件
-TRAIN_Y_KMEANS = "/train_ylabels_kmeans.npy"    #聚类标签文件
+TRAIN_Y_KMEANS = "/train_ylabels_kmeans_"+str(K)+".npy"    #聚类标签文件
 #TRAIN_Y_FILE = TRAIN_Y_SONG  #训练集标签文件名
 TRAIN_Y_FILE = TRAIN_Y_KMEANS  #训练集标签文件名
 
@@ -32,7 +32,7 @@ N_OUTS = K      #输出长度(分类数)，若使用聚类结果作为标签，�
 BATCH_SIZE = 10 #训练时每个小批量数据的大小
 
 #DBN_PICKLED_FILE = DATASET+'/dbn_qbh_song.pickle'   #DBN pickle文件的路径
-DBN_PICKLED_FILE = DATASET+'/dbn_qbh_kmeans_400.pickle'   #DBN pickle文件的路径
+DBN_PICKLED_FILE = DATASET+'/dbn_qbh_kmeans_'+str(K)+'.pickle'   #DBN pickle文件的路径
 X_DTYPE = 'float64' #训练数据类型
 Y_DTYPE = 'int32'   #标签数据类型
 
@@ -42,3 +42,5 @@ FINETUNE_EPOCHS = 200     #DBN建立时的微调迭代次数
 QUERY_X_FILE = "/query_xdata.npy"   #查询数据文件名
 QUERY_Y_FILE = "/query_ylabels_song.npy"  #查询数据标签文件名
 QUERY_RESULT_FILE = "/query_result.npy"    #查询结果文件
+
+CANDIDATE_SIZE = 10     #每个查询的候选数
