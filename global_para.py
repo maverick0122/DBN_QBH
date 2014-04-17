@@ -9,7 +9,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8') #允许打印unicode字符
 
 DATASET = './data'  #需要聚类数据所在文件夹
-K = 200  #聚类数，设定为跟歌曲数一个量级即可
+K = 500  #聚类数，设定为跟歌曲数一个量级即可
 BORROW = True   # True makes it faster with the GPU
                 #设置共享变量时的参数，为true能在GPU上运行更快
 NUMPY_ARRAY_ONLY = False     #设置为False时共享变量，用于GPU
