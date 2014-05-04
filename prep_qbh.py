@@ -24,14 +24,14 @@ def prep_data(dataset, scaling='normalize'):    #预处理训练数据，scaling
                                                 #将类号和类名的映射存储到文件to_int_and_to_state_dicts_tuple中
     xname = "xdata"
     try:
-        train_x = np.load(dataset + "/train_xdata.npy")
-        train_y = np.load(dataset + "/train_ylabels_kmeans.npy")
+        train_x = np.load(dataset + TRAIN_X_FILE)
+        train_y = np.load(dataset + TRAIN_Y_FILE)
 
     except:
         print >> sys.stderr, "you need the .npy python arrays"
         print >> sys.stderr, "you can produce them with txt_to_numpy.py"
-        print >> sys.stderr, dataset + "/train_xdata.npy"
-        print >> sys.stderr, dataset + "/train_ylabels_kmeans.npy"
+        print >> sys.stderr, dataset + TRAIN_X_FILE
+        print >> sys.stderr, dataset + TRAIN_Y_FILE
         sys.exit(-1)
 
     print "train_x shape:", train_x.shape
@@ -52,11 +52,12 @@ def prep_data(dataset, scaling='normalize'):    #预处理训练数据，scaling
     ### Labels (Ys)
     from collections import Counter
     c = Counter(train_y)    #统计train_y的每个值的个数，即每个分类的类名和属于该分类的样本数
+    # print c
     to_int = dict([(k, c.keys().index(k)) for k in c.iterkeys()])   #to_int记录{类名,类序号}map
     to_state = dict([(c.keys().index(k), k) for k in c.iterkeys()]) #to_state记录{类序号，类名}map
     # print to_int
     # print to_state
-    with open(dataset+'/to_int_and_to_state_dicts_tuple.pickle', 'w') as f:
+    with open(dataset+TO_INT_AND_TO_STATE_DICTS_FILE, 'w') as f:
         cPickle.dump((to_int, to_state), f)
 
     print "preparing / int mapping Ys"
@@ -180,4 +181,4 @@ def load_data(dataset, scaling='normalize',
             (test_set_x, test_set_y)] 
 
 if __name__ == '__main__':
-    load_data('./data')
+    load_data(DATASET)

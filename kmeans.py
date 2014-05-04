@@ -19,20 +19,38 @@
 类中心的音高序列用不同颜色，观察聚类是否紧密
 """
 
+'''
+K-Means算法目的：
+将n个d维的点分为k类，使准则函数最小，准则函数为所有聚类内部的均方误差和
+
+K-Means算法步骤：
+（1）随机在图中取K个聚类中心
+（2）对图中的每个点，求到这K个聚类中心的距离，分配到最近的聚类中心，距离度量用欧氏距离
+（3）重新计算每个类的聚类中心，计算属于每类所有点的均值作为聚类中心
+（4）重复第（2）（3）步，直到达到迭代次数，聚类中心不再移动
+
+设迭代次数为m，复杂度为O(kmnd)
+
+K-Means算法优化：
+（1）
+（2）
+
+'''
+
 import theano.tensor as T
 from scipy.cluster.vq import *
 from global_para import *
 
 def prep_data(dataset): #从npy文件读入数据
     try:
-        train_x = np.load(dataset + "/train_xdata.npy")
-        train_y = np.load(dataset + "/train_ylabels_song.npy")
+        train_x = np.load(dataset + TRAIN_X_FILE)
+        train_y = np.load(dataset + TRAIN_Y_SONG)
 
     except:
         print >> sys.stderr, "you need the .npy python arrays"
         print >> sys.stderr, "you can produce them with txt_to_numpy.py"
-        print >> sys.stderr, dataset + "/train_xdata.npy"
-        print >> sys.stderr, dataset + "/train_ylabels_song.npy"
+        print >> sys.stderr, dataset + TRAIN_X_FILE
+        print >> sys.stderr, dataset + TRAIN_Y_SONG
         sys.exit(-1)
 
     print "train_x shape:", train_x.shape
@@ -90,7 +108,7 @@ def K_means(dataset,k,iter=30):  #将dataset聚为k类iter为迭代次数
     #     print i,j
 
     #将聚类结果写入文件
-    write_npy(label,dataset + "/train_ylabels_kmeans.npy")
+    write_npy(label,dataset + TRAIN_Y_KMEANS)
     return [centroid,label]
 
 
@@ -169,6 +187,6 @@ def draw_cluser(dataset,centroid,label,k):  #画出前k个聚类的曲线
 
 if __name__ == '__main__':
     centroid,label = K_means(DATASET,K,100) #对DATASET数据聚类，聚类数K，迭代数100
-    draw_cluser(DATASET,centroid,label,10)  #画出前k个聚类的曲线
+    #draw_cluser(DATASET,centroid,label,10)  #画出前k个聚类的曲线
                                             #centroid为聚类中心值，label为聚类结果（每个数据的聚类号）
     print 'Done'

@@ -302,7 +302,7 @@ class DBN(object):
 
 def test_DBN(finetune_lr=0.1, pretraining_epochs=PRETRAIN_EPOCHS,
              pretrain_lr=0.01, k=1, training_epochs=FINETUNE_EPOCHS,
-             dataset='/mnist.pkl.gz', batch_size=N_BATCHES_DATASET,
+             dataset='/mnist.pkl.gz', batch_size=BATCH_SIZE,
              outputfile=DBN_PICKLED_FILE):
     """
 
