@@ -12,6 +12,7 @@ sys.path.append(os.getcwd())
 from collections import Counter
 from DBN import DBN
 from global_para import *
+from kmeans import cal_vector_dis
 
 usage = """
 python result.py OUTPUT[.txt] INPUT_QUERY
@@ -147,7 +148,7 @@ def show_result(query_xdata_fname = DATASET+QUERY_X_FILE,
     '''
     query_xdata_fname: 查询文件，每行一个查询，维数必须为N_FRAMES，此处为经过LS之后的DBN查询数据，为按帧抽取的音高序列
     output_fname: 输出文件，存储DBN分类结果，每行为按似然性从大到小对所属类排序
-    output_fname_txt: 输出文件，存储DBN分类结果，每行为按似然性从大到小对所属类排序，并将结果转换为初始索引
+    output_fname_txt: 输出文件，存储DBN分类结果，每行为按似然性从大到小对所属类排序，并将结果转换为初始索引，按距离从小到大排序
     query_ylabels_fname: 查询的正确结果，存储每个查询所属的音频文件名
     train_xdata_fname: DBN训练数据，每行存储一个音高序列
     train_ylabels_song_fname: DBN训练数据标签，存储每个数据所属的音频文件名
@@ -186,16 +187,6 @@ def show_result(query_xdata_fname = DATASET+QUERY_X_FILE,
     print 'label no. | samples'  #打印每类的训练数据数
     for i in range(0,len(clus_to_xdata)):
         print i,len(clus_to_xdata[i])
-
-    #将结果转换为初始索引，存入txt
-    output_txt = open(output_fname_txt,'w')
-    for items in output:
-        tmp_line = ''
-        for i in items:
-            tmp_line += str(clus_to_xdata[i]) + ' '
-        tmp_line += '\n'
-        output_txt.write(tmp_line)
-    output_txt.close()
 
     #读入训练数据所在的音频文件名（歌曲名）
     train_ylabels_song = np.load(train_ylabels_song_fname)
@@ -237,6 +228,36 @@ def show_result(query_xdata_fname = DATASET+QUERY_X_FILE,
 
         #正确候选在候选集中的比例,正确歌曲名以及其在训练集中的样本数
         #print qi,len(correct_candidate[qi]),'/',len(candidate[qi]),correct_songname,c_train_ylabels_song[correct_songname]
+
+    #读入查询数据和索引数据
+    query_data = np.load(DATASET+QUERY_X_FILE)
+    train_data = np.load(DATASET+TRAIN_X_FILE)
+
+    #计算候选和查询的欧氏距离，按距离从小到大排序，将前CANDIDATE_SIZE个写入文件遍历候选序号
+    output_txt = open(output_fname_txt,'w')
+    output_txt.write(str(CANDIDATE_SIZE))
+    for qi in range(0,query_cnt):
+        num_dis = []    #存储当前查询的候选序号和对应距离
+
+        cnt = 0
+        for i in candidate[qi]: #遍历候选序号
+            num_dis.append([])  #开辟空列表
+            num_dis[cnt].append(cal_vector_dis(query_data[qi],train_data[i]))    #计算查询和候选的欧氏距离
+            num_dis[cnt].append(i)
+            cnt += 1
+
+        num_dis.sort()  #默认按第一个元素排序
+
+        for j in range(0,CANDIDATE_SIZE):
+            output_txt.write(str(num_dis[j][1]))
+            output_txt.write(' ')
+        output_txt.write('\n')
+        for j in range(0,CANDIDATE_SIZE):
+            output_txt.write(str(num_dis[j][0]))
+            output_txt.write(' ')
+        output_txt.write('\n')
+
+    output_txt.close()
 
     #有正确候选的查询数/总查询数
     print has_correct_num,'/',query_cnt,'query(s) has correct candidates'
