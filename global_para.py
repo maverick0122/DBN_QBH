@@ -42,5 +42,5 @@ FINETUNE_EPOCHS = 200     #DBN建立时的微调迭代次数
 QUERY_X_FILE = "/query_xdata.npy"   #查询数据文件名
 QUERY_Y_FILE = "/query_ylabels_song.npy"  #查询数据标签文件名
 QUERY_RESULT_FILE = "/query_result.npy"    #查询结果文件
-QUERY_RESULT_FILE_TXT = "/query_result.txt"    #查询结果txt文件，每两行存储一个查询结果，第一行为候选序号，第二行为候选距离，按距离从小到大排序
+QUERY_RESULT_FILE_TXT = "/query_result_"+str(K)+".txt"    #查询结果txt文件，每两行存储一个查询结果，第一行为候选序号，第二行为候选距离，按距离从小到大排序
 CANDIDATE_SIZE = 10     #每个查询的候选数

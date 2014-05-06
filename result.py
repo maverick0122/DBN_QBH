@@ -144,11 +144,11 @@ def show_result(query_xdata_fname = DATASET+QUERY_X_FILE,
                 train_ylabels_song_fname = DATASET+TRAIN_Y_SONG,
                 train_ylabels_fname = DATASET+TRAIN_Y_FILE,
                 to_int_and_to_state_dicts_fname = DATASET+TO_INT_AND_TO_STATE_DICTS_FILE,
-                candidate_size = CANDIDATE_SIZE, isDraw = False, drawnum = 10):
+                candidate_size = CANDIDATE_SIZE, isDraw = True, drawnum = 10):
     '''
     query_xdata_fname: 查询文件，每行一个查询，维数必须为N_FRAMES，此处为经过LS之后的DBN查询数据，为按帧抽取的音高序列
     output_fname: 输出文件，存储DBN分类结果，每行为按似然性从大到小对所属类排序
-    output_fname_txt: 输出文件，存储DBN分类结果，每行为按似然性从大到小对所属类排序，并将结果转换为初始索引，按距离从小到大排序
+    output_fname_txt: 输出文件，存储DBN分类结果，每行为候选索引序号和对应的距离，按距离从小到大排序
     query_ylabels_fname: 查询的正确结果，存储每个查询所属的音频文件名
     train_xdata_fname: DBN训练数据，每行存储一个音高序列
     train_ylabels_song_fname: DBN训练数据标签，存储每个数据所属的音频文件名
@@ -251,8 +251,6 @@ def show_result(query_xdata_fname = DATASET+QUERY_X_FILE,
         for j in range(0,CANDIDATE_SIZE):
             output_txt.write(str(num_dis[j][1]))
             output_txt.write(' ')
-        output_txt.write('\n')
-        for j in range(0,CANDIDATE_SIZE):
             output_txt.write(str(num_dis[j][0]))
             output_txt.write(' ')
         output_txt.write('\n')
