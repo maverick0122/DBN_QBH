@@ -9,7 +9,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8') #允许打印unicode字符
 
 DATASET = './data'  #需要聚类数据所在文件夹
-K = 200  #聚类数，设定为跟歌曲数一个量级即可
+K = 25  #聚类数，设定为跟歌曲数一个量级即可
 BORROW = True   # True makes it faster with the GPU
                 #设置共享变量时的参数，为true能在GPU上运行更快
 NUMPY_ARRAY_ONLY = False     #设置为False时共享变量，用于GPU
@@ -37,10 +37,12 @@ X_DTYPE = 'float64' #训练数据类型
 Y_DTYPE = 'int32'   #标签数据类型
 
 PRETRAIN_EPOCHS = 100     #DBN建立时的预训练迭代次数
-FINETUNE_EPOCHS = 200     #DBN建立时的微调迭代次数
+FINETUNE_EPOCHS = 100     #DBN建立时的微调迭代次数
 
 QUERY_X_FILE = "/query_xdata.npy"   #查询数据文件名
 QUERY_Y_FILE = "/query_ylabels_song.npy"  #查询数据标签文件名
 QUERY_RESULT_FILE = "/query_result.npy"    #查询结果文件
 QUERY_RESULT_FILE_TXT = "/query_result_"+str(K)+".txt"    #查询结果txt文件，每两行存储一个查询结果，第一行为候选序号，第二行为候选距离，按距离从小到大排序
 CANDIDATE_SIZE = 10     #每个查询的候选数
+
+HIDDEN_LAYERS_SIZES = [512,512,512]   #隐层结构
