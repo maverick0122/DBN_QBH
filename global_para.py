@@ -9,7 +9,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8') #允许打印unicode字符
 
 DATASET = './data'  #需要聚类数据所在文件夹
-K = 25  #聚类数，设定为跟歌曲数一个量级即可
+K = 300  #聚类数，设定为跟歌曲数一个量级即可
 BORROW = True   # True makes it faster with the GPU
                 #设置共享变量时的参数，为true能在GPU上运行更快
 NUMPY_ARRAY_ONLY = False     #设置为False时共享变量，用于GPU
@@ -24,7 +24,7 @@ TRAIN_Y_KMEANS = "/train_ylabels_kmeans_"+str(K)+".npy"    #聚类标签文件
 TRAIN_Y_FILE = TRAIN_Y_KMEANS  #训练集标签文件名
 
 #存储两个字典，记录标签的类名和类序号映射
-TO_INT_AND_TO_STATE_DICTS_FILE = '/to_int_and_to_state_dicts_tuple.pickle'
+TO_INT_AND_TO_STATE_DICTS_FILE = '/to_int_and_to_state_dicts_tuple_kmeans_'+str(K)+'.pickle'
 
 N_OUTS = K      #输出长度(分类数)，若使用聚类结果作为标签，设置为聚类数
                 #若使用所属歌曲作为标签，设置为歌曲数
